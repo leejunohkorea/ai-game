@@ -2,8 +2,8 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Salaryman Mobile Optimized</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>The Salaryman: Mobile Joystick Edition</title>
     <style>
         body { 
             margin: 0;
@@ -15,6 +15,7 @@
             justify-content: center;
             align-items: center;
             user-select: none;
+            -webkit-user-select: none;
             touch-action: none;
         }
 
@@ -469,15 +470,14 @@
             line-height: 1.8;
         }
 
-        #mobile-controls {
+        #mobile-controls,
+        .mobile-guide,
+        #rotate-guide {
             display: none;
         }
 
-        .mobile-guide {
-            display: none;
-        }
-
-        @media (max-width: 768px), (pointer: coarse) {
+        /* 모바일/터치 기기 전용 */
+        @media (max-width: 900px), (pointer: coarse) {
             body {
                 width: 100vw;
                 height: 100dvh;
@@ -492,8 +492,8 @@
             }
 
             #ui-layer {
-                top: 8px;
-                padding: 0 10px;
+                top: max(8px, env(safe-area-inset-top));
+                padding: 0 12px;
             }
 
             h2 {
@@ -529,8 +529,8 @@
             }
 
             .creator-mark {
-                bottom: 118px;
-                right: 12px;
+                bottom: 104px;
+                right: 14px;
                 font-size: 11px;
             }
 
@@ -547,8 +547,8 @@
             }
 
             .rule-box {
-                width: 80%;
-                max-width: 360px;
+                width: 78%;
+                max-width: 520px;
                 font-size: 13px;
                 line-height: 1.55;
                 padding: 14px 12px;
@@ -561,7 +561,7 @@
 
             .mobile-guide {
                 display: block;
-                margin-top: 18px;
+                margin-top: 14px;
                 color: #f6e05e;
                 font-size: 17px;
                 font-weight: 800;
@@ -583,103 +583,172 @@
                 display: flex;
                 position: absolute;
                 left: 0;
-                bottom: 16px;
+                bottom: max(18px, env(safe-area-inset-bottom));
                 width: 100%;
                 justify-content: space-between;
                 align-items: flex-end;
-                padding: 0 16px;
+                padding: 0 max(26px, env(safe-area-inset-left)) 0 max(26px, env(safe-area-inset-right));
                 box-sizing: border-box;
                 z-index: 500;
                 pointer-events: none;
             }
 
-            .mobile-pad,
-            .mobile-action {
+            .mobile-action-left {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
                 pointer-events: auto;
             }
 
-            .mobile-pad {
-                display: grid;
-                grid-template-columns: 56px 56px 56px;
-                grid-template-rows: 56px 56px;
-                gap: 7px;
-            }
-
-            .mobile-pad button,
-            .mobile-action button {
+            .mobile-action-left button {
+                width: 96px;
+                height: 56px;
                 border: 1px solid rgba(255,255,255,0.35);
-                border-radius: 15px;
-                background: rgba(255,255,255,0.22);
+                border-radius: 18px;
                 color: white;
-                font-size: 24px;
+                font-size: 18px;
                 font-weight: 900;
+                background: rgba(229,62,62,0.72);
                 backdrop-filter: blur(8px);
                 box-shadow: 0 4px 12px rgba(0,0,0,0.45);
                 touch-action: none;
             }
 
-            .mobile-pad button:active,
-            .mobile-action button:active {
-                background: rgba(246,224,94,0.65);
-                transform: scale(0.96);
-            }
-
-            #upBtn {
-                grid-column: 2;
-                grid-row: 1;
-            }
-
-            #leftBtn {
-                grid-column: 1;
-                grid-row: 2;
-            }
-
-            #downBtn {
-                grid-column: 2;
-                grid-row: 2;
-            }
-
-            #rightBtn {
-                grid-column: 3;
-                grid-row: 2;
-            }
-
-            .mobile-action {
-                display: flex;
-                flex-direction: column;
-                gap: 9px;
-            }
-
-            .mobile-action button {
-                width: 94px;
-                height: 56px;
-                font-size: 18px;
-            }
-
-            #attackBtn {
-                background: rgba(229,62,62,0.68);
-            }
-
             #startBtn {
-                background: rgba(72,187,120,0.68);
+                background: rgba(72,187,120,0.72);
+            }
+
+            .mobile-action-left button:active {
+                transform: scale(0.96);
+                filter: brightness(1.25);
+            }
+
+            #joystick {
+                width: 128px;
+                height: 128px;
+                border-radius: 50%;
+                background: rgba(255,255,255,0.18);
+                border: 2px solid rgba(255,255,255,0.35);
+                position: relative;
+                pointer-events: auto;
+                touch-action: none;
+                backdrop-filter: blur(8px);
+                box-shadow: 0 4px 18px rgba(0,0,0,0.45);
+            }
+
+            #joystick::before {
+                content: "MOVE";
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%);
+                color: rgba(255,255,255,0.28);
+                font-size: 13px;
+                font-weight: 900;
+                letter-spacing: 1px;
+            }
+
+            #joystick-knob {
+                width: 54px;
+                height: 54px;
+                border-radius: 50%;
+                background: rgba(246,224,94,0.9);
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%);
+                box-shadow: 0 4px 12px rgba(0,0,0,0.45);
+            }
+
+            #rotate-guide {
+                display: none;
             }
         }
 
-        @media (max-width: 768px) and (orientation: portrait) {
-            #game-container::after {
-                content: "가로 화면으로 플레이하면 더 편합니다";
+        /* 모바일 세로모드 안내 */
+        @media (max-width: 900px) and (orientation: portrait) {
+            #rotate-guide {
+                display: flex;
                 position: absolute;
-                left: 50%;
-                top: 58px;
-                transform: translateX(-50%);
-                z-index: 450;
-                padding: 6px 10px;
-                border-radius: 20px;
-                background: rgba(0,0,0,0.5);
-                color: rgba(255,255,255,0.75);
+                inset: 0;
+                z-index: 900;
+                background: rgba(0,0,0,0.86);
+                color: white;
+                justify-content: center;
+                align-items: center;
+                text-align: center;
+                flex-direction: column;
+                padding: 24px;
+                box-sizing: border-box;
+            }
+
+            #rotate-guide .rotate-icon {
+                font-size: 56px;
+                margin-bottom: 16px;
+            }
+
+            #rotate-guide .rotate-title {
+                color: #f6e05e;
+                font-size: 24px;
+                font-weight: 900;
+                margin-bottom: 10px;
+            }
+
+            #rotate-guide .rotate-desc {
+                color: #e2e8f0;
+                font-size: 15px;
+                line-height: 1.6;
+            }
+        }
+
+        /* 모바일 가로모드 보정 */
+        @media (max-width: 900px) and (orientation: landscape) {
+            .start-title {
+                font-size: 32px;
+            }
+
+            .start-desc {
+                font-size: 14px;
+                margin: 6px 0;
+            }
+
+            .rule-box {
                 font-size: 12px;
-                white-space: nowrap;
-                pointer-events: none;
+                line-height: 1.42;
+                padding: 10px 14px;
+                margin-top: 6px;
+                max-width: 520px;
+            }
+
+            .mobile-guide {
+                margin-top: 8px;
+                font-size: 15px;
+            }
+
+            #mobile-controls {
+                bottom: max(12px, env(safe-area-inset-bottom));
+                padding-left: max(22px, env(safe-area-inset-left));
+                padding-right: max(22px, env(safe-area-inset-right));
+            }
+
+            .mobile-action-left button {
+                width: 90px;
+                height: 50px;
+                font-size: 17px;
+            }
+
+            #joystick {
+                width: 118px;
+                height: 118px;
+            }
+
+            #joystick-knob {
+                width: 50px;
+                height: 50px;
+            }
+
+            .creator-mark {
+                bottom: 88px;
             }
         }
     </style>
@@ -720,17 +789,20 @@
         <div class="creator-mark">Created by (주)굿인사이트 이준오</div>
 
         <div id="mobile-controls">
-            <div class="mobile-pad">
-                <button id="upBtn">↑</button>
-                <button id="leftBtn">←</button>
-                <button id="downBtn">↓</button>
-                <button id="rightBtn">→</button>
-            </div>
-
-            <div class="mobile-action">
+            <div class="mobile-action-left">
                 <button id="attackBtn">공격</button>
                 <button id="startBtn">시작</button>
             </div>
+
+            <div id="joystick">
+                <div id="joystick-knob"></div>
+            </div>
+        </div>
+
+        <div id="rotate-guide">
+            <div class="rotate-icon">📱↔️</div>
+            <div class="rotate-title">가로 화면으로 돌려주세요</div>
+            <div class="rotate-desc">이 게임은 모바일에서 가로모드에 최적화되어 있습니다.<br>오른손 조이스틱으로 이동하고, 왼손으로 공격합니다.</div>
         </div>
 
         <div id="start-screen">
@@ -744,7 +816,7 @@
                 적이 신입사원에게 닿으면 낙오 처리
             </div>
             <p class="pc-guide" style="margin-top:25px; color:#f6e05e; font-size:22px;">Spacebar를 눌러 시작</p>
-            <p class="mobile-guide">오른쪽 아래 시작 버튼을 눌러 시작</p>
+            <p class="mobile-guide">왼쪽 시작 버튼을 눌러 시작</p>
         </div>
 
         <div id="boss-warning-screen">
@@ -763,7 +835,7 @@
             <p style="font-size:18px; color:#9ae6b4;">탈출 성공: <span id="final-rescued">0</span>명</p>
             <p style="font-size:18px; color:#fc8181;">낙오: <span id="final-lost">0</span>명</p>
             <p class="pc-guide" style="margin-top:20px; color:#aaa;">Spacebar를 눌러 재도전</p>
-            <p class="mobile-guide">오른쪽 아래 시작 버튼을 눌러 재도전</p>
+            <p class="mobile-guide">왼쪽 시작 버튼을 눌러 재도전</p>
         </div>
     </div>
 
@@ -1785,45 +1857,6 @@
         }
     });
 
-    function bindMobileButton(buttonId, keyCode) {
-        const btn = document.getElementById(buttonId);
-        if (!btn) return;
-
-        btn.addEventListener('touchstart', function(e) {
-            e.preventDefault();
-            keys[keyCode] = true;
-        }, { passive: false });
-
-        btn.addEventListener('touchend', function(e) {
-            e.preventDefault();
-            keys[keyCode] = false;
-        }, { passive: false });
-
-        btn.addEventListener('touchcancel', function(e) {
-            e.preventDefault();
-            keys[keyCode] = false;
-        }, { passive: false });
-
-        btn.addEventListener('mousedown', function(e) {
-            e.preventDefault();
-            keys[keyCode] = true;
-        });
-
-        btn.addEventListener('mouseup', function(e) {
-            e.preventDefault();
-            keys[keyCode] = false;
-        });
-
-        btn.addEventListener('mouseleave', function() {
-            keys[keyCode] = false;
-        });
-    }
-
-    bindMobileButton('upBtn', 'ArrowUp');
-    bindMobileButton('downBtn', 'ArrowDown');
-    bindMobileButton('leftBtn', 'ArrowLeft');
-    bindMobileButton('rightBtn', 'ArrowRight');
-
     const attackBtn = document.getElementById('attackBtn');
     if (attackBtn) {
         attackBtn.addEventListener('touchstart', function(e) {
@@ -1854,8 +1887,104 @@
         });
     }
 
+    const joystick = document.getElementById('joystick');
+    const knob = document.getElementById('joystick-knob');
+
+    let joystickActive = false;
+    let joystickPointerId = null;
+    let joystickRadius = 48;
+
+    function resetJoystick() {
+        keys.ArrowUp = false;
+        keys.ArrowDown = false;
+        keys.ArrowLeft = false;
+        keys.ArrowRight = false;
+
+        if (knob) {
+            knob.style.left = '50%';
+            knob.style.top = '50%';
+        }
+    }
+
+    function updateJoystickByPoint(clientX, clientY) {
+        if (!joystick || !knob) return;
+
+        const rect = joystick.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        joystickRadius = rect.width * 0.38;
+
+        let dx = clientX - centerX;
+        let dy = clientY - centerY;
+
+        const distance = Math.hypot(dx, dy);
+        const maxDistance = joystickRadius;
+
+        if (distance > maxDistance) {
+            dx = (dx / distance) * maxDistance;
+            dy = (dy / distance) * maxDistance;
+        }
+
+        knob.style.left = `calc(50% + ${dx}px)`;
+        knob.style.top = `calc(50% + ${dy}px)`;
+
+        const threshold = rect.width * 0.12;
+
+        keys.ArrowLeft = dx < -threshold;
+        keys.ArrowRight = dx > threshold;
+        keys.ArrowUp = dy < -threshold;
+        keys.ArrowDown = dy > threshold;
+
+        if (Math.abs(dx) > Math.abs(dy)) {
+            lastDir = { x: dx > 0 ? 1 : -1, y: 0 };
+        } else if (Math.abs(dy) > threshold) {
+            lastDir = { x: 0, y: dy > 0 ? 1 : -1 };
+        }
+    }
+
+    if (joystick) {
+        joystick.addEventListener('pointerdown', function(e) {
+            e.preventDefault();
+            joystickActive = true;
+            joystickPointerId = e.pointerId;
+            joystick.setPointerCapture(e.pointerId);
+            updateJoystickByPoint(e.clientX, e.clientY);
+        });
+
+        joystick.addEventListener('pointermove', function(e) {
+            e.preventDefault();
+            if (joystickActive && e.pointerId === joystickPointerId) {
+                updateJoystickByPoint(e.clientX, e.clientY);
+            }
+        });
+
+        joystick.addEventListener('pointerup', function(e) {
+            e.preventDefault();
+            if (e.pointerId === joystickPointerId) {
+                joystickActive = false;
+                joystickPointerId = null;
+                resetJoystick();
+            }
+        });
+
+        joystick.addEventListener('pointercancel', function(e) {
+            e.preventDefault();
+            joystickActive = false;
+            joystickPointerId = null;
+            resetJoystick();
+        });
+    }
+
     window.addEventListener('blur', () => {
         Object.keys(keys).forEach(k => keys[k] = false);
+        resetJoystick();
+    });
+
+    window.addEventListener('resize', () => {
+        if (container) {
+            mapW = container.clientWidth;
+            mapH = container.clientHeight;
+        }
     });
 </script>
 </body>
