@@ -1,1991 +1,1292 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>The Salaryman: Mobile Joystick Edition</title>
-    <style>
-        body { 
-            margin: 0;
-            height: 100vh; 
-            background-color: #000; 
-            overflow: hidden; 
-            font-family: 'Segoe UI', 'Malgun Gothic', sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            user-select: none;
-            -webkit-user-select: none;
-            touch-action: none;
-        }
-
-        #game-container {
-            position: relative;
-            width: 95vw;
-            height: 90vh;
-            background-color: #2d3748;
-            background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://www.transparenttextures.com/patterns/cracked-ground.png');
-            border: 5px solid #4a5568;
-            box-shadow: 0 0 60px rgba(0,0,0,0.9);
-            overflow: hidden;
-            transition: filter 0.3s, border-color 0.3s;
-        }
-
-        .fever-mode-bg {
-            filter: sepia(1) hue-rotate(-50deg) saturate(3) !important;
-            border-color: #e53e3e !important;
-        }
-
-        .shake-hard {
-            animation: shake-ani 0.5s cubic-bezier(.36,.07,.19,.97) both infinite;
-        }
-
-        @keyframes shake-ani {
-            0% { transform: translate(0, 0); }
-            20% { transform: translate(-8px, 8px); }
-            40% { transform: translate(8px, -8px); }
-            60% { transform: translate(-8px, -8px); }
-            80% { transform: translate(8px, 8px); }
-            100% { transform: translate(0, 0); }
-        }
-
-        #ui-layer {
-            position: absolute;
-            top: 20px;
-            left: 0;
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            padding: 0 50px;
-            box-sizing: border-box;
-            z-index: 100;
-            pointer-events: none;
-        }
-
-        .hud-box {
-            text-align: left;
-            color: white;
-        }
-
-        h2 {
-            margin: 0;
-            color: #fc8181;
-            font-size: 28px;
-            text-shadow: 2px 2px 5px black;
-        }
-
-        .score-txt {
-            font-size: 22px;
-            font-weight: bold;
-        }
-
-        .sub-txt {
-            font-size: 14px;
-            color: #cbd5e0;
-            line-height: 1.5;
-        }
-
-        .mission-txt {
-            margin-top: 6px;
-            font-size: 13px;
-            color: #9ae6b4;
-            text-shadow: 1px 1px 3px #000;
-        }
-
-        #rage-container {
-            width: 200px;
-            height: 20px;
-            background: #1a202c;
-            border: 2px solid #fff;
-            border-radius: 10px;
-            margin-top: 7px;
-            overflow: hidden;
-            position: relative;
-        }
-
-        #rage-bar {
-            width: 0%;
-            height: 100%;
-            background: linear-gradient(90deg, #f6e05e, #e53e3e);
-            transition: width 0.2s;
-        }
-
-        #rage-text {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            text-align: center;
-            font-size: 12px;
-            font-weight: bold;
-            line-height: 20px;
-            text-shadow: 1px 1px 0 #000;
-        }
-
-        #right-ui {
-            text-align: right;
-        }
-
-        #weapon-slot {
-            width: 70px;
-            height: 70px;
-            background: rgba(0,0,0,0.6);
-            border: 3px solid #718096;
-            border-radius: 10px;
-            display: inline-flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            margin-bottom: 10px;
-        }
-
-        #weapon-icon {
-            width: 40px;
-            height: 40px;
-            display: none;
-        }
-
-        #ammo-count {
-            position: absolute;
-            bottom: 2px;
-            right: 5px;
-            color: #f6e05e;
-            font-weight: bold;
-        }
-
-        .creator-mark {
-            position: absolute;
-            bottom: 15px;
-            right: 20px;
-            color: rgba(255, 255, 255, 0.4);
-            font-size: 14px;
-            z-index: 90;
-            pointer-events: none;
-        }
-
-        .game-object {
-            position: absolute;
-            transform: translate(-50%, -50%);
-            z-index: 10;
-        }
-
-        .player-img {
-            width: 60px;
-            height: auto;
-            filter: drop-shadow(0 5px 5px black);
-            transition: filter 0.2s, transform 0.2s;
-        }
-
-        .boosted {
-            filter: drop-shadow(0 0 20px #63b3ed) brightness(1.35) !important;
-        }
-
-        .fever-player {
-            filter: drop-shadow(0 0 30px #e53e3e) brightness(1.5) !important;
-            transform: translate(-50%, -50%) scale(1.2) !important;
-        }
-
-        .intern-unit {
-            width: 60px;
-            height: auto;
-            z-index: 9;
-            filter: grayscale(0.6);
-        }
-
-        .intern-fallback {
-            width: 52px;
-            height: 52px;
-            border-radius: 50%;
-            background: #63b3ed;
-            border: 3px solid #ebf8ff;
-            color: #102a43;
-            font-size: 30px;
-            font-weight: 900;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 0 12px rgba(99, 179, 237, 0.9);
-        }
-
-        .intern-fallback::before {
-            content: "👔";
-        }
-
-        .intern-sos {
-            position: absolute;
-            top: -24px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: #fff;
-            background: #e53e3e;
-            border-radius: 10px;
-            padding: 2px 7px;
-            font-weight: 900;
-            font-size: 12px;
-            white-space: nowrap;
-            box-shadow: 0 0 7px #000;
-        }
-
-        .intern-following {
-            filter: grayscale(0) drop-shadow(0 0 7px #63b3ed);
-        }
-
-        .intern-danger {
-            filter: grayscale(0) drop-shadow(0 0 12px #e53e3e) !important;
-            animation: panic 0.2s infinite alternate;
-        }
-
-        @keyframes panic {
-            from { transform: translate(-50%, -50%) rotate(-4deg); }
-            to { transform: translate(-50%, -50%) rotate(4deg); }
-        }
-
-        .client-unit {
-            width: 90px;
-            height: auto;
-            z-index: 11;
-            filter: drop-shadow(0 5px 5px #000);
-        }
-
-        .boss-unit {
-            filter: drop-shadow(0 10px 10px rgba(0,0,0,0.8));
-            z-index: 12;
-        }
-
-        .hit-effect {
-            filter: brightness(3) sepia(1) hue-rotate(-50deg) !important;
-        }
-
-        .exit-gate {
-            position: absolute;
-            width: 58px;
-            height: 58px;
-            background-image: url('https://cdn-icons-png.flaticon.com/512/1243/1243539.png');
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-            z-index: 4;
-            transform: translate(-50%, -50%);
-            filter: drop-shadow(0 0 12px #48bb78);
-            animation: pulse-exit 1s infinite alternate;
-        }
-
-        @keyframes pulse-exit {
-            from { opacity: 0.8; scale: 1; }
-            to { opacity: 1; scale: 1.12; }
-        }
-
-        .projectile {
-            position: absolute;
-            width: 30px;
-            height: 30px;
-            z-index: 15;
-            background-size: cover;
-            transform: translate(-50%, -50%);
-        }
-
-        .paper-bullet { 
-            position: absolute;
-            width: 30px;
-            height: 30px; 
-            z-index: 15; 
-            background-size: cover; 
-            background-color: #fff;
-            border: 1px solid #ccc;
-            transform: translate(-50%, -50%); 
-            animation: spin 0.2s linear infinite; 
-        }
-
-        @keyframes spin {
-            100% { transform: translate(-50%, -50%) rotate(360deg); }
-        }
-
-        .target-item {
-            position: absolute;
-            width: 40px;
-            height: 40px;
-            background-image: url('https://cdn-icons-png.flaticon.com/512/2910/2910795.png'); 
-            background-size: cover;
-            z-index: 5;
-            transform: translate(-50%, -50%);
-            animation: bounce 1s infinite alternate;
-        }
-
-        @keyframes bounce {
-            from { transform: translate(-50%, -40%); }
-            to { transform: translate(-50%, -60%); }
-        }
-
-        .item-drop {
-            position: absolute;
-            width: 45px;
-            height: 45px;
-            z-index: 5;
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-            transform: translate(-50%, -50%);
-            animation: pulse-item 1s infinite;
-        }
-
-        @keyframes pulse-item {
-            0% { scale: 1; }
-            50% { scale: 1.15; }
-            100% { scale: 1; }
-        }
-
-        .special-radio {
-            position: absolute;
-            width: 50px;
-            height: 50px;
-            z-index: 6;
-            background-image: url('https://cdn-icons-png.flaticon.com/512/900/900469.png');
-            background-size: cover;
-            transform: translate(-50%, -50%);
-            filter: drop-shadow(0 0 10px #e53e3e);
-            animation: pulse-radio 0.4s infinite;
-        }
-
-        @keyframes pulse-radio {
-            from { scale: 1; }
-            to { scale: 1.18; }
-        }
-
-        .aim-target {
-            position: absolute;
-            width: 70px;
-            height: 70px;
-            transform: translate(-50%, -50%);
-            border: 3px dashed #e53e3e;
-            border-radius: 50%;
-            z-index: 18;
-            animation: aim-blink 0.15s infinite alternate;
-        }
-
-        @keyframes aim-blink {
-            from { opacity: 0.25; }
-            to { opacity: 1; }
-        }
-
-        .explosion {
-            position: absolute;
-            transform: translate(-50%, -50%);
-            border-radius: 50%;
-            z-index: 20;
-            opacity: 0.9;
-            background: radial-gradient(circle, #fff 10%, #f6e05e 30%, #e53e3e 60%, transparent 70%);
-            animation: explode-anim 0.8s ease-out forwards;
-        }
-
-        @keyframes explode-anim {
-            0% { width: 10px; height: 10px; opacity: 1; }
-            50% { width: 200px; height: 200px; opacity: 0.8; }
-            100% { width: 240px; height: 240px; opacity: 0; }
-        }
-
-        .floating-text {
-            position: absolute;
-            color: #f6e05e;
-            font-weight: bold;
-            font-size: 20px;
-            pointer-events: none;
-            z-index: 100;
-            text-shadow: 1px 1px 0 #000;
-            animation: float-up 0.8s ease-out forwards;
-        }
-
-        @keyframes float-up {
-            0% { transform: translate(-50%, 0); opacity: 1; }
-            100% { transform: translate(-50%, -50px); opacity: 0; }
-        }
-
-        #boss-warning-screen,
-        #pause-screen,
-        #game-over-screen,
-        #start-screen {
-            display: none;
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 300;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-        }
-
-        #start-screen {
-            display: flex;
-            background-color: rgba(0,0,0,0.85);
-        }
-
-        #boss-warning-screen {
-            background-color: rgba(0, 0, 0, 0.85);
-        }
-
-        #pause-screen {
-            background-color: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(5px);
-        }
-
-        #game-over-screen {
-            background-color: rgba(0,0,0,0.9);
-        }
-
-        .warning-text {
-            color: #e53e3e;
-            font-size: 80px;
-            font-weight: 900;
-            animation: pulse-text 0.3s infinite alternate;
-        }
-
-        @keyframes pulse-text {
-            from { transform: scale(1); }
-            to { transform: scale(1.1); }
-        }
-
-        .start-title {
-            color: #fc8181;
-            font-size: 62px;
-            margin: 0;
-            text-shadow: 0 0 20px #000;
-        }
-
-        .start-desc {
-            color: #e2e8f0;
-            font-size: 20px;
-            line-height: 1.7;
-        }
-
-        .rule-box {
-            margin-top: 16px;
-            padding: 18px 24px;
-            border: 1px solid rgba(255,255,255,0.25);
-            border-radius: 14px;
-            background: rgba(255,255,255,0.08);
-            color: #fff;
-            font-size: 16px;
-            line-height: 1.8;
-        }
-
-        #mobile-controls,
-        .mobile-guide,
-        #rotate-guide {
-            display: none;
-        }
-
-        /* 모바일/터치 기기 전용 */
-        @media (max-width: 900px), (pointer: coarse) {
-            body {
-                width: 100vw;
-                height: 100dvh;
-                align-items: flex-start;
-            }
-
-            #game-container {
-                width: 100vw;
-                height: 100dvh;
-                border: none;
-                box-shadow: none;
-            }
-
-            #ui-layer {
-                top: max(8px, env(safe-area-inset-top));
-                padding: 0 12px;
-            }
-
-            h2 {
-                font-size: 18px;
-            }
-
-            .score-txt {
-                font-size: 15px;
-            }
-
-            .sub-txt {
-                font-size: 11px;
-                line-height: 1.35;
-            }
-
-            .mission-txt {
-                display: none;
-            }
-
-            #rage-container {
-                width: 140px;
-                height: 16px;
-                margin-top: 5px;
-            }
-
-            #rage-text {
-                font-size: 10px;
-                line-height: 16px;
-            }
-
-            #right-ui {
-                display: none;
-            }
-
-            .creator-mark {
-                bottom: 104px;
-                right: 14px;
-                font-size: 11px;
-            }
-
-            .start-title {
-                font-size: 34px;
-                line-height: 1.1;
-                padding: 0 12px;
-            }
-
-            .start-desc {
-                font-size: 15px;
-                margin: 10px 0;
-                padding: 0 18px;
-            }
-
-            .rule-box {
-                width: 78%;
-                max-width: 520px;
-                font-size: 13px;
-                line-height: 1.55;
-                padding: 14px 12px;
-                margin-top: 10px;
-            }
-
-            .pc-guide {
-                display: none;
-            }
-
-            .mobile-guide {
-                display: block;
-                margin-top: 14px;
-                color: #f6e05e;
-                font-size: 17px;
-                font-weight: 800;
-            }
-
-            #game-over-screen h1 {
-                font-size: 44px !important;
-            }
-
-            #pause-screen h1 {
-                font-size: 42px !important;
-            }
-
-            .warning-text {
-                font-size: 48px;
-            }
-
-            #mobile-controls {
-                display: flex;
-                position: absolute;
-                left: 0;
-                bottom: max(18px, env(safe-area-inset-bottom));
-                width: 100%;
-                justify-content: space-between;
-                align-items: flex-end;
-                padding: 0 max(26px, env(safe-area-inset-left)) 0 max(26px, env(safe-area-inset-right));
-                box-sizing: border-box;
-                z-index: 500;
-                pointer-events: none;
-            }
-
-            .mobile-action-left {
-                display: flex;
-                flex-direction: column;
-                gap: 10px;
-                pointer-events: auto;
-            }
-
-            .mobile-action-left button {
-                width: 96px;
-                height: 56px;
-                border: 1px solid rgba(255,255,255,0.35);
-                border-radius: 18px;
-                color: white;
-                font-size: 18px;
-                font-weight: 900;
-                background: rgba(229,62,62,0.72);
-                backdrop-filter: blur(8px);
-                box-shadow: 0 4px 12px rgba(0,0,0,0.45);
-                touch-action: none;
-            }
-
-            #startBtn {
-                background: rgba(72,187,120,0.72);
-            }
-
-            .mobile-action-left button:active {
-                transform: scale(0.96);
-                filter: brightness(1.25);
-            }
-
-            #joystick {
-                width: 128px;
-                height: 128px;
-                border-radius: 50%;
-                background: rgba(255,255,255,0.18);
-                border: 2px solid rgba(255,255,255,0.35);
-                position: relative;
-                pointer-events: auto;
-                touch-action: none;
-                backdrop-filter: blur(8px);
-                box-shadow: 0 4px 18px rgba(0,0,0,0.45);
-            }
-
-            #joystick::before {
-                content: "MOVE";
-                position: absolute;
-                left: 50%;
-                top: 50%;
-                transform: translate(-50%, -50%);
-                color: rgba(255,255,255,0.28);
-                font-size: 13px;
-                font-weight: 900;
-                letter-spacing: 1px;
-            }
-
-            #joystick-knob {
-                width: 54px;
-                height: 54px;
-                border-radius: 50%;
-                background: rgba(246,224,94,0.9);
-                position: absolute;
-                left: 50%;
-                top: 50%;
-                transform: translate(-50%, -50%);
-                box-shadow: 0 4px 12px rgba(0,0,0,0.45);
-            }
-
-            #rotate-guide {
-                display: none;
-            }
-        }
-
-        /* 모바일 세로모드 안내 */
-        @media (max-width: 900px) and (orientation: portrait) {
-            #rotate-guide {
-                display: flex;
-                position: absolute;
-                inset: 0;
-                z-index: 900;
-                background: rgba(0,0,0,0.86);
-                color: white;
-                justify-content: center;
-                align-items: center;
-                text-align: center;
-                flex-direction: column;
-                padding: 24px;
-                box-sizing: border-box;
-            }
-
-            #rotate-guide .rotate-icon {
-                font-size: 56px;
-                margin-bottom: 16px;
-            }
-
-            #rotate-guide .rotate-title {
-                color: #f6e05e;
-                font-size: 24px;
-                font-weight: 900;
-                margin-bottom: 10px;
-            }
-
-            #rotate-guide .rotate-desc {
-                color: #e2e8f0;
-                font-size: 15px;
-                line-height: 1.6;
-            }
-        }
-
-        /* 모바일 가로모드 보정 */
-        @media (max-width: 900px) and (orientation: landscape) {
-            .start-title {
-                font-size: 32px;
-            }
-
-            .start-desc {
-                font-size: 14px;
-                margin: 6px 0;
-            }
-
-            .rule-box {
-                font-size: 12px;
-                line-height: 1.42;
-                padding: 10px 14px;
-                margin-top: 6px;
-                max-width: 520px;
-            }
-
-            .mobile-guide {
-                margin-top: 8px;
-                font-size: 15px;
-            }
-
-            #mobile-controls {
-                bottom: max(12px, env(safe-area-inset-bottom));
-                padding-left: max(22px, env(safe-area-inset-left));
-                padding-right: max(22px, env(safe-area-inset-right));
-            }
-
-            .mobile-action-left button {
-                width: 90px;
-                height: 50px;
-                font-size: 17px;
-            }
-
-            #joystick {
-                width: 118px;
-                height: 118px;
-            }
-
-            #joystick-knob {
-                width: 50px;
-                height: 50px;
-            }
-
-            .creator-mark {
-                bottom: 88px;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>The Salaryman: Coffee Rush</title>
+  <style>
+    :root {
+      --vh: 1vh;
+      --safe-bottom: env(safe-area-inset-bottom);
+      --safe-left: env(safe-area-inset-left);
+      --safe-right: env(safe-area-inset-right);
+      --safe-top: env(safe-area-inset-top);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #050608;
+      font-family: "Segoe UI", "Malgun Gothic", sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #game-container {
+      position: relative;
+      width: min(96vw, 1280px);
+      height: min(90vh, 720px);
+      overflow: hidden;
+      border: 5px solid #4a5568;
+      border-radius: 18px;
+      background:
+        linear-gradient(rgba(0,0,0,0.22), rgba(0,0,0,0.58)),
+        radial-gradient(circle at 20% 10%, rgba(99,179,237,0.18), transparent 25%),
+        linear-gradient(180deg, #1a202c 0%, #2d3748 55%, #111827 100%);
+      box-shadow: 0 0 60px rgba(0,0,0,0.9);
+    }
+
+    #game-container.shake {
+      animation: shake 0.45s linear infinite;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translate(0, 0); }
+      20% { transform: translate(-5px, 4px); }
+      40% { transform: translate(5px, -4px); }
+      60% { transform: translate(-4px, -5px); }
+      80% { transform: translate(4px, 5px); }
+    }
+
+    #city-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(to top, rgba(0,0,0,0.55), transparent 38%),
+        repeating-linear-gradient(
+          to right,
+          transparent 0 70px,
+          rgba(255,255,255,0.04) 70px 74px
+        );
+      opacity: 0.85;
+      pointer-events: none;
+    }
+
+    #floor {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      height: 18%;
+      background:
+        linear-gradient(180deg, #2d3748, #111827),
+        repeating-linear-gradient(90deg, #202938 0 40px, #1a202c 40px 80px);
+      border-top: 4px solid rgba(255,255,255,0.12);
+      z-index: 2;
+    }
+
+    #floor::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 14px;
+      width: 200%;
+      height: 4px;
+      background: repeating-linear-gradient(90deg, #f6e05e 0 60px, transparent 60px 120px);
+      opacity: 0.65;
+      animation: roadMove 1.5s linear infinite;
+    }
+
+    @keyframes roadMove {
+      from { transform: translateX(0); }
+      to { transform: translateX(-120px); }
+    }
+
+    #ui-layer {
+      position: absolute;
+      top: 18px;
+      left: 0;
+      width: 100%;
+      padding: 0 34px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      z-index: 80;
+      pointer-events: none;
+      color: white;
+    }
+
+    .title {
+      margin: 0;
+      color: #fc8181;
+      font-size: 28px;
+      line-height: 1;
+      text-shadow: 2px 2px 8px #000;
+    }
+
+    .score-line {
+      margin-top: 8px;
+      font-size: 19px;
+      font-weight: 800;
+      text-shadow: 1px 1px 6px #000;
+    }
+
+    .small-line {
+      margin-top: 4px;
+      color: #cbd5e0;
+      font-size: 13px;
+      line-height: 1.35;
+      text-shadow: 1px 1px 5px #000;
+    }
+
+    #coffee-panel {
+      text-align: right;
+      font-weight: 900;
+      text-shadow: 1px 1px 6px #000;
+    }
+
+    #coffee-panel .coffee-count {
+      color: #f6e05e;
+      font-size: 28px;
+    }
+
+    #coffee-panel .coffee-label {
+      color: #e2e8f0;
+      font-size: 13px;
+    }
+
+    #player {
+      position: absolute;
+      left: 17%;
+      bottom: 18%;
+      width: 72px;
+      height: 72px;
+      z-index: 30;
+      transform: translateY(0);
+      transform-origin: center bottom;
+      filter: drop-shadow(0 7px 7px rgba(0,0,0,0.8));
+    }
+
+    #player img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    #player.fallback {
+      border-radius: 50%;
+      background: #48bb78;
+      border: 4px solid #c6f6d5;
+    }
+
+    #player.fallback::after {
+      content: "🏃";
+      position: absolute;
+      inset: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 40px;
+    }
+
+    #player.invincible {
+      filter: drop-shadow(0 0 24px #63b3ed) brightness(1.25);
+      animation: blink 0.18s alternate infinite;
+    }
+
+    @keyframes blink {
+      from { opacity: 1; }
+      to { opacity: 0.62; }
+    }
+
+    .enemy {
+      position: absolute;
+      bottom: 18%;
+      z-index: 28;
+      transform-origin: center bottom;
+      filter: drop-shadow(0 7px 7px rgba(0,0,0,0.85));
+    }
+
+    .enemy img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    .enemy.fallback {
+      border-radius: 50%;
+      background: #e53e3e;
+      border: 4px solid #fed7d7;
+    }
+
+    .enemy.fallback::after {
+      content: "🧟";
+      position: absolute;
+      inset: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 38px;
+    }
+
+    .enemy.boss {
+      z-index: 29;
+      filter: drop-shadow(0 0 20px rgba(229,62,62,0.75)) drop-shadow(0 8px 8px #000);
+    }
+
+    .enemy.boss.fallback::after {
+      content: "👔🧟";
+      font-size: 42px;
+    }
+
+    .boss-hp {
+      position: absolute;
+      left: 50%;
+      top: -14px;
+      width: 86%;
+      height: 8px;
+      transform: translateX(-50%);
+      border: 1px solid rgba(255,255,255,0.75);
+      border-radius: 6px;
+      background: rgba(0,0,0,0.55);
+      overflow: hidden;
+    }
+
+    .boss-hp span {
+      display: block;
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, #f6e05e, #e53e3e);
+    }
+
+    .coffee-shot {
+      position: absolute;
+      width: 38px;
+      height: 38px;
+      z-index: 35;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 35% 35%, #fff 0 12%, transparent 13%),
+        #8b4513;
+      border: 3px solid #f6e05e;
+      box-shadow: 0 0 12px rgba(246,224,94,0.7);
+      animation: spin 0.25s linear infinite;
+    }
+
+    .coffee-shot::after {
+      content: "☕";
+      position: absolute;
+      inset: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 22px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .item {
+      position: absolute;
+      bottom: 24%;
+      width: 44px;
+      height: 44px;
+      z-index: 25;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.16);
+      border: 2px solid rgba(255,255,255,0.55);
+      box-shadow: 0 0 14px rgba(246,224,94,0.65);
+      animation: floatItem 0.75s alternate infinite;
+    }
+
+    .item::after {
+      content: "☕";
+      position: absolute;
+      inset: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 28px;
+    }
+
+    .item.energy::after {
+      content: "⚡";
+    }
+
+    @keyframes floatItem {
+      from { transform: translateY(0); }
+      to { transform: translateY(-10px); }
+    }
+
+    .floating-text {
+      position: absolute;
+      z-index: 120;
+      color: #f6e05e;
+      font-weight: 900;
+      font-size: 20px;
+      text-shadow: 2px 2px 0 #000;
+      pointer-events: none;
+      animation: floatUp 0.9s ease-out forwards;
+    }
+
+    @keyframes floatUp {
+      from { transform: translate(-50%, 0); opacity: 1; }
+      to { transform: translate(-50%, -56px); opacity: 0; }
+    }
+
+    #start-screen,
+    #game-over-screen,
+    #boss-warning {
+      position: absolute;
+      inset: 0;
+      z-index: 200;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      text-align: center;
+      background: rgba(0,0,0,0.86);
+      color: white;
+      padding: 24px;
+    }
+
+    #start-screen {
+      display: flex;
+    }
+
+    .start-title {
+      margin: 0;
+      color: #fc8181;
+      font-size: 62px;
+      line-height: 1.05;
+      text-shadow: 0 0 20px #000;
+    }
+
+    .start-sub {
+      margin: 18px 0 0;
+      color: #e2e8f0;
+      font-size: 20px;
+      line-height: 1.65;
+    }
+
+    .rule-box {
+      margin-top: 20px;
+      padding: 18px 26px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.28);
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+      font-size: 16px;
+      line-height: 1.8;
+    }
+
+    .start-guide {
+      margin-top: 24px;
+      color: #f6e05e;
+      font-size: 22px;
+      font-weight: 900;
+    }
+
+    #boss-warning {
+      background: rgba(0,0,0,0.78);
+    }
+
+    #boss-warning h1 {
+      margin: 0;
+      color: #e53e3e;
+      font-size: 76px;
+      animation: warningPulse 0.26s infinite alternate;
+    }
+
+    #boss-warning p {
+      margin: 14px 0 0;
+      font-size: 26px;
+      color: #fff;
+    }
+
+    @keyframes warningPulse {
+      from { transform: scale(1); }
+      to { transform: scale(1.09); }
+    }
+
+    #game-over-screen h1 {
+      margin: 0;
+      color: #e53e3e;
+      font-size: 70px;
+    }
+
+    .final-score {
+      margin-top: 16px;
+      font-size: 24px;
+      color: #fff;
+    }
+
+    .creator-mark {
+      position: absolute;
+      right: 20px;
+      bottom: 18px;
+      z-index: 60;
+      color: rgba(255,255,255,0.36);
+      font-size: 13px;
+      pointer-events: none;
+    }
+
+    #mobile-controls,
+    .mobile-guide,
+    #rotate-guide {
+      display: none;
+    }
+
+    @media (max-width: 900px), (pointer: coarse) {
+      body {
+        display: block;
+        width: 100vw;
+        height: calc(var(--vh) * 100);
+      }
+
+      #game-container {
+        width: 100vw;
+        height: calc(var(--vh) * 100);
+        border: none;
+        border-radius: 0;
+        box-shadow: none;
+      }
+
+      #ui-layer {
+        top: max(6px, var(--safe-top));
+        padding: 0 12px;
+      }
+
+      .title {
+        font-size: 18px;
+      }
+
+      .score-line {
+        margin-top: 4px;
+        font-size: 15px;
+      }
+
+      .small-line {
+        font-size: 11px;
+      }
+
+      #coffee-panel .coffee-count {
+        font-size: 22px;
+      }
+
+      #coffee-panel .coffee-label {
+        font-size: 11px;
+      }
+
+      #player {
+        width: 58px;
+        height: 58px;
+        left: 18%;
+      }
+
+      .start-title {
+        font-size: 34px;
+      }
+
+      .start-sub {
+        font-size: 14px;
+        margin-top: 10px;
+      }
+
+      .rule-box {
+        width: min(86vw, 520px);
+        margin-top: 10px;
+        padding: 12px 14px;
+        font-size: 12px;
+        line-height: 1.55;
+      }
+
+      .pc-guide {
+        display: none;
+      }
+
+      .mobile-guide {
+        display: block;
+      }
+
+      .start-guide {
+        margin-top: 12px;
+        font-size: 16px;
+      }
+
+      #boss-warning h1 {
+        font-size: 44px;
+      }
+
+      #boss-warning p {
+        font-size: 18px;
+      }
+
+      #game-over-screen h1 {
+        font-size: 44px;
+      }
+
+      .final-score {
+        font-size: 18px;
+      }
+
+      .creator-mark {
+        right: 12px;
+        bottom: calc(82px + var(--safe-bottom));
+        font-size: 10px;
+      }
+
+      #mobile-controls {
+        display: flex;
+        position: absolute;
+        left: 0;
+        bottom: max(10px, var(--safe-bottom));
+        width: 100%;
+        justify-content: space-between;
+        align-items: flex-end;
+        padding-left: max(18px, var(--safe-left));
+        padding-right: max(18px, var(--safe-right));
+        z-index: 260;
+        pointer-events: none;
+      }
+
+      .mobile-btn {
+        pointer-events: auto;
+        width: 104px;
+        height: 62px;
+        border: 1px solid rgba(255,255,255,0.35);
+        border-radius: 20px;
+        color: white;
+        font-size: 18px;
+        font-weight: 900;
+        text-shadow: 1px 1px 4px #000;
+        backdrop-filter: blur(8px);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.45);
+        touch-action: none;
+      }
+
+      #attackBtn {
+        background: rgba(229, 62, 62, 0.74);
+      }
+
+      #jumpBtn {
+        background: rgba(72, 187, 120, 0.74);
+      }
+
+      .mobile-btn:active {
+        transform: scale(0.96);
+        filter: brightness(1.22);
+      }
+
+      #startMobileBtn {
+        position: absolute;
+        left: 50%;
+        bottom: max(14px, var(--safe-bottom));
+        transform: translateX(-50%);
+        width: 120px;
+        height: 52px;
+        border: 1px solid rgba(255,255,255,0.4);
+        border-radius: 18px;
+        background: rgba(246,224,94,0.78);
+        color: #1a202c;
+        font-size: 18px;
+        font-weight: 900;
+        z-index: 265;
+        display: block;
+        pointer-events: auto;
+      }
+    }
+
+    @media (max-width: 900px) and (orientation: portrait) {
+      #rotate-guide {
+        position: absolute;
+        inset: 0;
+        z-index: 500;
+        background: rgba(0,0,0,0.87);
+        color: white;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        text-align: center;
+        padding: 24px;
+      }
+
+      #rotate-guide .icon {
+        font-size: 54px;
+        margin-bottom: 14px;
+      }
+
+      #rotate-guide .main {
+        color: #f6e05e;
+        font-size: 23px;
+        font-weight: 900;
+      }
+
+      #rotate-guide .sub {
+        margin-top: 10px;
+        color: #e2e8f0;
+        font-size: 14px;
+        line-height: 1.6;
+      }
+    }
+
+    @media (max-width: 900px) and (orientation: landscape) {
+      .start-title {
+        font-size: 30px;
+      }
+
+      .start-sub {
+        font-size: 13px;
+        margin-top: 6px;
+      }
+
+      .rule-box {
+        margin-top: 7px;
+        padding: 9px 14px;
+        font-size: 11px;
+        line-height: 1.42;
+        max-width: 540px;
+      }
+
+      .start-guide {
+        margin-top: 7px;
+      }
+
+      .mobile-btn {
+        width: 96px;
+        height: 54px;
+        font-size: 17px;
+      }
+
+      #startMobileBtn {
+        width: 110px;
+        height: 46px;
+        font-size: 16px;
+      }
+
+      .creator-mark {
+        bottom: calc(70px + var(--safe-bottom));
+      }
+    }
+  </style>
 </head>
 <body>
+  <audio id="bgm" src="bgm.mp3" loop></audio>
+  <audio id="sfx-throw" src="https://assets.mixkit.co/sfx/preview/mixkit-whoosh-swish-1412.mp3"></audio>
+  <audio id="sfx-hit" src="https://assets.mixkit.co/sfx/preview/mixkit-hard-pop-click-2364.mp3"></audio>
+  <audio id="sfx-jump" src="https://assets.mixkit.co/sfx/preview/mixkit-player-jumping-in-a-video-game-2043.mp3"></audio>
+  <audio id="sfx-power" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-mechanical-bling-210.mp3"></audio>
+  <audio id="sfx-boom" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-explosion-1699.mp3"></audio>
 
-    <audio id="bgm" src="bgm.mp3" loop></audio>
-    <audio id="sfx-throw" src="https://assets.mixkit.co/sfx/preview/mixkit-whoosh-swish-1412.mp3"></audio>
-    <audio id="sfx-hit" src="https://assets.mixkit.co/sfx/preview/mixkit-hard-pop-click-2364.mp3"></audio>
-    <audio id="sfx-powerup" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-mechanical-bling-210.mp3"></audio>
-    <audio id="sfx-boom" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-explosion-1699.mp3"></audio>
-    <audio id="sfx-fever" src="https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.mp3"></audio>
+  <div id="game-container">
+    <div id="city-bg"></div>
+    <div id="floor"></div>
 
-    <div id="game-container">
-        <div id="ui-layer">
-            <div class="hud-box">
-                <h2>REAL ESCAPE</h2>
-                <div class="score-txt">성과: <span id="score" style="color:#f6e05e;">0</span></div>
-                <div class="sub-txt">구출 대기: <span id="intern-count" style="color:#63b3ed;">0</span>명</div>
-                <div class="sub-txt">탈출 성공: <span id="rescued-count" style="color:#9ae6b4;">0</span>명 / 낙오: <span id="lost-count" style="color:#fc8181;">0</span>명</div>
-                <div class="mission-txt">인턴을 데리고 있으면 성과 배율↑, 이동속도↓, 적에게 닿으면 낙오</div>
+    <div id="ui-layer">
+      <div>
+        <h2 class="title">REAL ESCAPE</h2>
+        <div class="score-line">성과: <span id="score" style="color:#f6e05e;">0</span></div>
+        <div class="small-line">생존: <span id="timeText" style="color:#9ae6b4;">0.0</span>초</div>
+        <div class="small-line">부장 좀비는 2단 점프 또는 커피 5잔!</div>
+      </div>
 
-                <div id="rage-container">
-                    <div id="rage-bar"></div>
-                    <div id="rage-text">RAGE GAUGE</div>
-                </div>
-            </div>
-
-            <div id="right-ui">
-                <div id="weapon-slot">
-                    <img id="weapon-icon" src="" alt="weapon">
-                    <div id="ammo-count"></div>
-                </div>
-                <div style="color:#aaa; font-size:12px;">Space:시작 | Z:공격 | P:일시정지</div>
-            </div>
-        </div>
-
-        <div class="creator-mark">Created by (주)굿인사이트 이준오</div>
-
-        <div id="mobile-controls">
-            <div class="mobile-action-left">
-                <button id="attackBtn">공격</button>
-                <button id="startBtn">시작</button>
-            </div>
-
-            <div id="joystick">
-                <div id="joystick-knob"></div>
-            </div>
-        </div>
-
-        <div id="rotate-guide">
-            <div class="rotate-icon">📱↔️</div>
-            <div class="rotate-title">가로 화면으로 돌려주세요</div>
-            <div class="rotate-desc">이 게임은 모바일에서 가로모드에 최적화되어 있습니다.<br>오른손 조이스틱으로 이동하고, 왼손으로 공격합니다.</div>
-        </div>
-
-        <div id="start-screen">
-            <h1 class="start-title">THE SALARYMAN</h1>
-            <p class="start-desc">신입사원을 구출해 비상구까지 데려가세요.</p>
-            <div class="rule-box">
-                방향키: 이동<br>
-                Z: 커피 투척<br>
-                신입사원 동행 시 성과 배율 상승<br>
-                단, 동행 인원이 많을수록 이동속도 감소<br>
-                적이 신입사원에게 닿으면 낙오 처리
-            </div>
-            <p class="pc-guide" style="margin-top:25px; color:#f6e05e; font-size:22px;">Spacebar를 눌러 시작</p>
-            <p class="mobile-guide">왼쪽 시작 버튼을 눌러 시작</p>
-        </div>
-
-        <div id="boss-warning-screen">
-            <p class="warning-text">부장님 등장</p>
-            <p style="color:white; font-size:30px;">🚨 비상 사태!! 🚨</p>
-        </div>
-
-        <div id="pause-screen">
-            <h1 style="color:#63b3ed; font-size:60px;">업무 일시 중단</h1>
-            <p style="color:#fff;">P 키를 눌러 업무 복귀</p>
-        </div>
-
-        <div id="game-over-screen">
-            <h1 style="color:#e53e3e; font-size:70px;">퇴근 실패</h1>
-            <p style="font-size:24px; color:white;">최종 성과: <span id="final-score">0</span></p>
-            <p style="font-size:18px; color:#9ae6b4;">탈출 성공: <span id="final-rescued">0</span>명</p>
-            <p style="font-size:18px; color:#fc8181;">낙오: <span id="final-lost">0</span>명</p>
-            <p class="pc-guide" style="margin-top:20px; color:#aaa;">Spacebar를 눌러 재도전</p>
-            <p class="mobile-guide">왼쪽 시작 버튼을 눌러 재도전</p>
-        </div>
+      <div id="coffee-panel">
+        <div class="coffee-count">☕ <span id="coffeeCount">∞</span></div>
+        <div class="coffee-label">커피 투척</div>
+      </div>
     </div>
 
+    <div id="player">
+      <img src="player.png" alt="player" onerror="this.remove(); document.getElementById('player').classList.add('fallback');">
+    </div>
+
+    <div class="creator-mark">Created by (주)굿인사이트 이준오</div>
+
+    <div id="mobile-controls">
+      <button id="attackBtn" class="mobile-btn">☕ 공격</button>
+      <button id="startMobileBtn">시작</button>
+      <button id="jumpBtn" class="mobile-btn">점프</button>
+    </div>
+
+    <div id="rotate-guide">
+      <div class="icon">📱↔️</div>
+      <div class="main">가로 화면으로 돌려주세요</div>
+      <div class="sub">모바일에서는 왼손으로 커피 공격,<br>오른손으로 점프합니다.</div>
+    </div>
+
+    <div id="start-screen">
+      <h1 class="start-title">THE SALARYMAN</h1>
+      <p class="start-sub">퇴근길을 막아서는 좀비 업무를 피해 살아남으세요.</p>
+      <div class="rule-box">
+        <b>PC</b> : Space 시작/점프 · 공중에서 Space 2단 점프 · Z 커피 공격<br>
+        <b>모바일</b> : 왼쪽 하단 공격 · 오른쪽 하단 점프<br>
+        일반 좀비는 점프 또는 커피 1잔, 부장 좀비는 2단 점프 또는 커피 5잔으로 대응
+      </div>
+      <div class="start-guide pc-guide">Spacebar를 눌러 시작</div>
+      <div class="start-guide mobile-guide">아래쪽 시작 버튼을 눌러 시작</div>
+    </div>
+
+    <div id="boss-warning">
+      <h1>부장님 등장</h1>
+      <p>“잠깐 이야기 좀 하지...”</p>
+    </div>
+
+    <div id="game-over-screen">
+      <h1>퇴근 실패</h1>
+      <div class="final-score">최종 성과: <span id="finalScore">0</span></div>
+      <div class="final-score">생존 시간: <span id="finalTime">0.0</span>초</div>
+      <div class="start-guide pc-guide">Spacebar를 눌러 재도전</div>
+      <div class="start-guide mobile-guide">아래쪽 시작 버튼을 눌러 재도전</div>
+    </div>
+  </div>
+
 <script>
-    const PLAYER_SRC = 'player.png'; 
-    const ZOMBIE_SRC = 'zombie.gif';
-    const BOSS_SRC = 'boss.png';
-    const INTERN_SRC = 'intern.png';
-    const CLIENT_SRC = 'client.png'; 
-    const PAPER_SRC = 'paper.png';   
-    const EXIT_SRC = 'exit.png';
+  const PLAYER_SRC = "player.png";
+  const ZOMBIE_SRC = "zombie.gif";
+  const BOSS_SRC = "boss.png";
 
-    const DRINK_ICON = 'https://cdn-icons-png.flaticon.com/512/616/616490.png'; 
-    const COFFEE_ICON = 'https://cdn-icons-png.flaticon.com/512/924/924514.png';
+  const container = document.getElementById("game-container");
+  const playerEl = document.getElementById("player");
+  const scoreEl = document.getElementById("score");
+  const timeTextEl = document.getElementById("timeText");
+  const startScreen = document.getElementById("start-screen");
+  const gameOverScreen = document.getElementById("game-over-screen");
+  const bossWarning = document.getElementById("boss-warning");
+  const finalScoreEl = document.getElementById("finalScore");
+  const finalTimeEl = document.getElementById("finalTime");
+  const bgm = document.getElementById("bgm");
 
-    const container = document.getElementById('game-container');
-    const scoreEl = document.getElementById('score');
-    const internEl = document.getElementById('intern-count');
-    const rescuedEl = document.getElementById('rescued-count');
-    const lostEl = document.getElementById('lost-count');
-    const rageBar = document.getElementById('rage-bar');
-    const rageText = document.getElementById('rage-text');
+  const sfx = {
+    throw: document.getElementById("sfx-throw"),
+    hit: document.getElementById("sfx-hit"),
+    jump: document.getElementById("sfx-jump"),
+    power: document.getElementById("sfx-power"),
+    boom: document.getElementById("sfx-boom")
+  };
 
-    const startScreen = document.getElementById('start-screen');
-    const gameOverScreen = document.getElementById('game-over-screen');
-    const bossWarningScreen = document.getElementById('boss-warning-screen'); 
-    const pauseScreen = document.getElementById('pause-screen'); 
-    const weaponIcon = document.getElementById('weapon-icon');
-    const ammoEl = document.getElementById('ammo-count');
+  let gameW = 0;
+  let gameH = 0;
+  let groundY = 0;
+  let floorHeight = 0;
 
-    const bgm = document.getElementById('bgm');
-    const sfx = {
-        throw: document.getElementById('sfx-throw'),
-        hit: document.getElementById('sfx-hit'),
-        powerup: document.getElementById('sfx-powerup'),
-        boom: document.getElementById('sfx-boom'),
-        fever: document.getElementById('sfx-fever')
+  let isStarted = false;
+  let isGameOver = false;
+  let isBossWarning = false;
+  let lastFrame = 0;
+  let animationId = null;
+
+  let score = 0;
+  let elapsed = 0;
+  let spawnTimer = 0;
+  let itemTimer = 0;
+  let nextBossAt = 28;
+  let speed = 360;
+
+  let enemies = [];
+  let shots = [];
+  let items = [];
+
+  let attackCooldown = 0;
+  let invincibleTimer = 0;
+
+  const player = {
+    x: 0,
+    y: 0,
+    w: 72,
+    h: 72,
+    vy: 0,
+    gravity: 2100,
+    jumpPower: 820,
+    jumpCount: 0,
+    maxJump: 2
+  };
+
+  function setVH() {
+    document.documentElement.style.setProperty("--vh", `${window.innerHeight * 0.01}px`);
+  }
+
+  setVH();
+  window.addEventListener("resize", () => {
+    setVH();
+    measure();
+  });
+
+  function measure() {
+    gameW = container.clientWidth;
+    gameH = container.clientHeight;
+    floorHeight = gameH * 0.18;
+    groundY = gameH - floorHeight;
+    player.x = gameW * 0.17;
+    player.w = isMobile() ? 58 : 72;
+    player.h = isMobile() ? 58 : 72;
+    if (!isStarted) {
+      player.y = groundY - player.h;
+      renderPlayer();
+    }
+  }
+
+  function isMobile() {
+    return window.matchMedia("(max-width: 900px), (pointer: coarse)").matches;
+  }
+
+  function playSfx(sound) {
+    if (!sound) return;
+    sound.currentTime = 0;
+    sound.play().catch(() => {});
+  }
+
+  function initGame() {
+    measure();
+
+    enemies.forEach(e => e.el.remove());
+    shots.forEach(s => s.el.remove());
+    items.forEach(i => i.el.remove());
+
+    enemies = [];
+    shots = [];
+    items = [];
+
+    score = 0;
+    elapsed = 0;
+    spawnTimer = 0;
+    itemTimer = 0;
+    nextBossAt = 28;
+    speed = isMobile() ? 340 : 370;
+    attackCooldown = 0;
+    invincibleTimer = 0;
+    isStarted = true;
+    isGameOver = false;
+    isBossWarning = false;
+    lastFrame = performance.now();
+
+    player.y = groundY - player.h;
+    player.vy = 0;
+    player.jumpCount = 0;
+
+    scoreEl.textContent = "0";
+    timeTextEl.textContent = "0.0";
+    startScreen.style.display = "none";
+    gameOverScreen.style.display = "none";
+    bossWarning.style.display = "none";
+    container.classList.remove("shake");
+    playerEl.classList.remove("invincible");
+
+    bgm.volume = 0.38;
+    bgm.play().catch(() => {});
+
+    if (animationId) cancelAnimationFrame(animationId);
+    animationId = requestAnimationFrame(loop);
+  }
+
+  function endGame() {
+    isGameOver = true;
+    isStarted = false;
+    finalScoreEl.textContent = score;
+    finalTimeEl.textContent = elapsed.toFixed(1);
+    gameOverScreen.style.display = "flex";
+    bgm.pause();
+    container.classList.remove("shake");
+  }
+
+  function showFloatingText(x, y, text, color = "#f6e05e") {
+    const el = document.createElement("div");
+    el.className = "floating-text";
+    el.textContent = text;
+    el.style.left = x + "px";
+    el.style.top = y + "px";
+    el.style.color = color;
+    container.appendChild(el);
+    setTimeout(() => el.remove(), 900);
+  }
+
+  function jump() {
+    if (!isStarted || isGameOver || isBossWarning) return;
+
+    if (player.jumpCount < player.maxJump) {
+      player.vy = -player.jumpPower;
+      player.jumpCount++;
+      playSfx(sfx.jump);
+
+      if (player.jumpCount === 2) {
+        showFloatingText(player.x + player.w / 2, player.y, "2단 점프!", "#63b3ed");
+      }
+    }
+  }
+
+  function attack() {
+    if (!isStarted || isGameOver || isBossWarning) return;
+    if (attackCooldown > 0) return;
+
+    attackCooldown = 0.28;
+    playSfx(sfx.throw);
+
+    const el = document.createElement("div");
+    el.className = "coffee-shot";
+    container.appendChild(el);
+
+    const shot = {
+      el,
+      x: player.x + player.w - 4,
+      y: player.y + player.h * 0.45,
+      w: 38,
+      h: 38,
+      vx: isMobile() ? 760 : 840
     };
 
-    let isGameOver = false;
-    let isGameStarted = false;
-    let isPaused = false;
-    let isCutscene = false;
+    shots.push(shot);
+    renderShot(shot);
+  }
 
-    let score = 0;
-    let rescuedCount = 0;
-    let lostCount = 0;
-    let ammo = 0; 
-    let mapW;
-    let mapH;
-    let animationId;
-    let lastDir = { x: 1, y: 0 }; 
+  function spawnEnemy(type = "normal") {
+    const isBoss = type === "boss";
+    const size = isBoss ? (isMobile() ? 132 : 158) : (isMobile() ? 62 : 76);
+    const hp = isBoss ? 5 : 1;
 
-    const keys = {
-        ArrowUp: false,
-        ArrowDown: false,
-        ArrowLeft: false,
-        ArrowRight: false,
-        KeyZ: false
+    const el = document.createElement("div");
+    el.className = "enemy" + (isBoss ? " boss" : "");
+    el.style.width = size + "px";
+    el.style.height = size + "px";
+
+    const img = document.createElement("img");
+    img.src = isBoss ? BOSS_SRC : ZOMBIE_SRC;
+    img.alt = type;
+    img.onerror = function() {
+      img.remove();
+      el.classList.add("fallback");
+    };
+    el.appendChild(img);
+
+    if (isBoss) {
+      const hpBar = document.createElement("div");
+      hpBar.className = "boss-hp";
+      hpBar.innerHTML = "<span></span>";
+      el.appendChild(hpBar);
+    }
+
+    container.appendChild(el);
+
+    const enemy = {
+      el,
+      type,
+      isBoss,
+      hp,
+      maxHp: hp,
+      x: gameW + size + 30,
+      y: groundY - size,
+      w: size,
+      h: size,
+      vx: isBoss ? speed * 0.76 : speed,
+      passed: false
     };
 
-    const player = {
-        element: null,
-        x: 0,
-        y: 0,
-        size: 60,
-        baseSpeed: 5,
-        speed: 5
+    enemies.push(enemy);
+    renderEnemy(enemy);
+  }
+
+  function spawnBossSequence() {
+    isBossWarning = true;
+    bossWarning.style.display = "flex";
+    container.classList.add("shake");
+    playSfx(sfx.boom);
+
+    setTimeout(() => {
+      if (isGameOver) return;
+      bossWarning.style.display = "none";
+      isBossWarning = false;
+      spawnEnemy("boss");
+      setTimeout(() => container.classList.remove("shake"), 900);
+    }, 1300);
+  }
+
+  function spawnItem() {
+    const type = Math.random() < 0.72 ? "coffee" : "energy";
+    const el = document.createElement("div");
+    el.className = "item" + (type === "energy" ? " energy" : "");
+    container.appendChild(el);
+
+    const item = {
+      el,
+      type,
+      x: gameW + 60,
+      y: groundY - (isMobile() ? 116 : 132),
+      w: 44,
+      h: 44,
+      vx: speed * 0.85
     };
 
-    const target = {
-        element: null,
-        x: 0,
-        y: 0,
-        size: 40
+    items.push(item);
+    renderItem(item);
+  }
+
+  function rectsHit(a, b) {
+    return (
+      a.x < b.x + b.w &&
+      a.x + a.w > b.x &&
+      a.y < b.y + b.h &&
+      a.y + a.h > b.y
+    );
+  }
+
+  function playerRect() {
+    return {
+      x: player.x + player.w * 0.16,
+      y: player.y + player.h * 0.12,
+      w: player.w * 0.68,
+      h: player.h * 0.82
     };
+  }
 
-    const exit = {
-        element: null,
-        x: 0,
-        y: 0,
-        size: 58
-    };
+  function renderPlayer() {
+    playerEl.style.width = player.w + "px";
+    playerEl.style.height = player.h + "px";
+    playerEl.style.left = player.x + "px";
+    playerEl.style.top = player.y + "px";
+  }
 
-    let enemies = [];
-    let items = [];
-    let interns = [];
-    let followers = [];
-    let projectiles = [];
-    let enemyBullets = [];
-    let specialItem = null;
+  function renderEnemy(enemy) {
+    enemy.el.style.left = enemy.x + "px";
+    enemy.el.style.top = enemy.y + "px";
 
-    let itemTimer = 0;
-    let specialTimer = 0;
-    let internTimer = 0;
-    let clientTimer = 0;
-    let exitTimer = 0;
-    let bossSpawnThreshold = 100;
+    if (enemy.isBoss) {
+      const bar = enemy.el.querySelector(".boss-hp span");
+      if (bar) bar.style.width = Math.max(0, (enemy.hp / enemy.maxHp) * 100) + "%";
+    }
+  }
 
-    let rage = 0;
-    const RAGE_MAX = 100;
-    let isFever = false;
-    let boostTimeout = null;
+  function renderShot(shot) {
+    shot.el.style.left = shot.x + "px";
+    shot.el.style.top = shot.y + "px";
+  }
 
-    const RESCUE_BONUS_PER_INTERN = 120;
-    const INTERN_SCORE_MULTIPLIER = 0.18;
-    const SPEED_PENALTY_PER_INTERN = 0.07;
-    const MIN_SPEED_RATE_WITH_INTERNS = 0.62;
+  function renderItem(item) {
+    item.el.style.left = item.x + "px";
+    item.el.style.top = item.y + "px";
+  }
 
-    function initGame() {
-        mapW = container.clientWidth;
-        mapH = container.clientHeight;
+  function update(dt) {
+    if (attackCooldown > 0) attackCooldown -= dt;
 
-        document.querySelectorAll('.game-object, .target-item, .item-drop, .projectile, .paper-bullet, .special-radio, .explosion, .aim-target, .floating-text, .exit-gate').forEach(el => el.remove());
-
-        enemies = [];
-        items = [];
-        interns = [];
-        followers = [];
-        projectiles = [];
-        enemyBullets = [];
-        specialItem = null;
-
-        score = 0;
-        rescuedCount = 0;
-        lostCount = 0;
-        rage = 0;
-        ammo = 0;
-        bossSpawnThreshold = 100;
-
-        itemTimer = 0;
-        specialTimer = 0;
-        internTimer = 0;
-        clientTimer = 0;
-        exitTimer = 0;
-
-        isGameOver = false;
-        isGameStarted = true;
-        isPaused = false;
-        isCutscene = false;
-        isFever = false;
-
-        container.classList.remove('fever-mode-bg');
-        player.speed = player.baseSpeed;
-
-        startScreen.style.display = 'none';
-        gameOverScreen.style.display = 'none';
-        bossWarningScreen.style.display = 'none';
-        pauseScreen.style.display = 'none';
-
-        updateScoreUI();
-        updateRageUI();
-        updateWeaponUI();
-
-        bgm.volume = 0.4;
-        bgm.play().catch(() => {});
-
-        player.element = document.createElement('img');
-        player.element.src = PLAYER_SRC; 
-        player.element.className = 'game-object player-img';
-        player.element.onerror = function() {
-            this.src = '';
-            this.style.backgroundColor = '#48bb78';
-            this.style.width = '50px';
-            this.style.height = '50px';
-            this.style.borderRadius = '50%';
-        };
-
-        player.x = mapW / 2;
-        player.y = mapH / 2;
-        container.appendChild(player.element);
-
-        target.element = document.createElement('div');
-        target.element.className = 'target-item';
-        container.appendChild(target.element);
-        moveTarget();
-
-        exit.element = document.createElement('div');
-        exit.element.className = 'exit-gate';
-        if (EXIT_SRC) {
-            exit.element.style.backgroundImage = `url('${EXIT_SRC}')`;
-        }
-        container.appendChild(exit.element);
-        moveExit();
-
-        for (let i = 0; i < 4; i++) {
-            spawnEnemy('zombie');
-        }
-
-        spawnIntern();
-
-        if (animationId) cancelAnimationFrame(animationId);
-        gameLoop();
+    if (invincibleTimer > 0) {
+      invincibleTimer -= dt;
+      playerEl.classList.add("invincible");
+    } else {
+      playerEl.classList.remove("invincible");
     }
 
-    function spawnEnemy(type) {
-        if (isCutscene) return;
+    elapsed += dt;
+    speed += dt * 4.5;
+    score += Math.floor(dt * 10);
+    scoreEl.textContent = score;
+    timeTextEl.textContent = elapsed.toFixed(1);
 
-        const enemy = {
-            element: document.createElement('img'),
-            x: 0,
-            y: 0,
-            hp: 1,
-            type: type,
-            attackCooldown: 0,
-            size: 65,
-            speed: 1.5,
-            isBoss: false
-        };
+    player.vy += player.gravity * dt;
+    player.y += player.vy * dt;
 
-        if (Math.random() < 0.5) {
-            enemy.x = Math.random() < 0.5 ? -150 : mapW + 150;
-            enemy.y = Math.random() * mapH;
-        } else {
-            enemy.x = Math.random() * mapW;
-            enemy.y = Math.random() < 0.5 ? -150 : mapH + 150;
-        }
-
-        if (type === 'boss') {
-            enemy.size = 180;
-            enemy.hp = 15;
-            enemy.speed = 1.6;
-            enemy.isBoss = true;
-            enemy.element.src = BOSS_SRC;
-            enemy.element.className = 'game-object boss-unit';
-        } else if (type === 'client') {
-            enemy.size = 90;
-            enemy.hp = 3;
-            enemy.speed = 1.0;
-            enemy.element.src = CLIENT_SRC;
-            enemy.element.className = 'game-object client-unit';
-            enemy.element.onerror = function() {
-                this.src = 'https://cdn-icons-png.flaticon.com/512/1077/1077114.png';
-            };
-        } else {
-            enemy.size = 65;
-            enemy.hp = 1;
-            enemy.speed = Math.random() * 2.0 + 1.2;
-            enemy.element.src = ZOMBIE_SRC;
-            enemy.element.className = 'game-object';
-            enemy.element.onerror = function() {
-                this.src = '';
-                this.style.backgroundColor = '#e53e3e';
-                this.style.width = '50px';
-                this.style.height = '50px';
-                this.style.borderRadius = '50%';
-            };
-        }
-
-        enemy.element.style.width = enemy.size + 'px';
-        enemy.element.style.height = 'auto';
-        container.appendChild(enemy.element);
-        enemies.push(enemy);
+    if (player.y >= groundY - player.h) {
+      player.y = groundY - player.h;
+      player.vy = 0;
+      player.jumpCount = 0;
     }
 
-    function spawnBossCutscene() {
-        isCutscene = true;
-        bossWarningScreen.style.display = 'flex';
-        sfx.boom.play().catch(() => {}); 
+    renderPlayer();
 
-        setTimeout(() => {
-            bossWarningScreen.style.display = 'none'; 
-            isCutscene = false;
-            spawnEnemy('boss');
+    spawnTimer += dt;
+    const spawnInterval = Math.max(0.78, 1.42 - elapsed * 0.012);
 
-            container.classList.add('shake-hard');
-            setTimeout(() => container.classList.remove('shake-hard'), 1000);
-        }, 2000);
+    if (spawnTimer >= spawnInterval && !isBossWarning) {
+      spawnTimer = 0;
+      spawnEnemy("normal");
     }
 
-    function spawnIntern() {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'game-object intern-unit';
-        wrapper.style.width = '60px';
-        wrapper.style.height = '60px';
-
-        const img = document.createElement('img');
-        img.src = INTERN_SRC;
-        img.alt = 'intern';
-        img.style.width = '60px';
-        img.style.height = 'auto';
-        img.style.display = 'block';
-
-        img.onerror = function() {
-            img.remove();
-
-            const fallback = document.createElement('div');
-            fallback.className = 'intern-fallback';
-            wrapper.appendChild(fallback);
-        };
-
-        const sos = document.createElement('div');
-        sos.className = 'intern-sos';
-        sos.innerText = 'SOS!';
-
-        wrapper.appendChild(img);
-        wrapper.appendChild(sos);
-
-        const intern = {
-            element: wrapper,
-            x: 50 + Math.random() * (mapW - 100),
-            y: 50 + Math.random() * (mapH - 100),
-            size: 60,
-            dangerTimer: 0
-        };
-
-        wrapper.style.left = intern.x + 'px';
-        wrapper.style.top = intern.y + 'px';
-
-        container.appendChild(wrapper);
-        interns.push(intern);
+    if (elapsed >= nextBossAt && !isBossWarning) {
+      nextBossAt += 30 + Math.random() * 12;
+      spawnBossSequence();
     }
 
-    function spawnRandomItem() {
-        const r = Math.random(); 
-        let type;
-        let url;
-
-        if (r < 0.3) {
-            type = 'drink';
-            url = DRINK_ICON;
-        } else {
-            type = 'coffee';
-            url = COFFEE_ICON;
-        }
-
-        const item = {
-            element: document.createElement('div'),
-            x: 50 + Math.random() * (mapW - 100),
-            y: 50 + Math.random() * (mapH - 100),
-            size: 45,
-            type: type
-        };
-
-        item.element.className = 'item-drop';
-        item.element.style.backgroundImage = `url('${url}')`;
-        item.element.style.left = item.x + 'px';
-        item.element.style.top = item.y + 'px';
-        container.appendChild(item.element);
-        items.push(item);
+    itemTimer += dt;
+    if (itemTimer >= 8.5) {
+      itemTimer = 0;
+      if (Math.random() < 0.78) spawnItem();
     }
 
-    function spawnSpecialItem() { 
-        if (specialItem) return;
-
-        specialItem = {
-            element: document.createElement('div'),
-            x: 60 + Math.random() * (mapW - 120),
-            y: 60 + Math.random() * (mapH - 120),
-            size: 55
-        };
-
-        specialItem.element.className = 'special-radio';
-        specialItem.element.style.left = specialItem.x + 'px';
-        specialItem.element.style.top = specialItem.y + 'px';
-        container.appendChild(specialItem.element);
-    }
-
-    function fireWeapon() {
-        if (ammo <= 0 || isPaused || isCutscene || isGameOver) return;
-
-        sfx.throw.currentTime = 0;
-        sfx.throw.play().catch(() => {});
-
-        ammo--;
-        updateWeaponUI();
-
-        const proj = {
-            element: document.createElement('div'),
-            x: player.x,
-            y: player.y,
-            dx: lastDir.x * 12,
-            dy: lastDir.y * 12,
-            size: 35
-        };
-
-        proj.element.className = 'projectile';
-        proj.element.style.backgroundImage = `url('${COFFEE_ICON}')`;
-        proj.element.style.animation = 'spin 0.5s linear infinite';
-        container.appendChild(proj.element);
-        projectiles.push(proj);
-    }
-
-    function enemyShoot(enemy) {
-        const dx = player.x - enemy.x;
-        const dy = player.y - enemy.y;
-        const dist = Math.hypot(dx, dy);
-
-        if (dist > 600 || dist === 0) return; 
-
-        const bullet = {
-            element: document.createElement('div'),
-            x: enemy.x,
-            y: enemy.y,
-            size: 30
-        };
-
-        const speed = 8;
-        bullet.dx = (dx / dist) * speed;
-        bullet.dy = (dy / dist) * speed;
-        bullet.element.className = 'paper-bullet';
-        bullet.element.style.backgroundImage = `url('${PAPER_SRC}')`;
-
-        if (!PAPER_SRC) {
-            bullet.element.style.backgroundColor = 'white';
-        }
-
-        container.appendChild(bullet.element);
-        enemyBullets.push(bullet);
-    }
-
-    function hitEnemy(enemy, idx, damage = 1) {
-        enemy.hp -= damage;
-        enemy.element.classList.add('hit-effect');
-
-        setTimeout(() => {
-            if (enemy.element) enemy.element.classList.remove('hit-effect');
-        }, 100);
-
-        if (enemy.hp <= 0) {
-            let basePoints = enemy.isBoss ? 50 : (enemy.type === 'client' ? 20 : 5);
-            let finalPoints = Math.floor(basePoints * getFollowerScoreMultiplier());
-
-            showFloatingText(enemy.x, enemy.y, '+' + finalPoints, '#f6e05e');
-
-            score += finalPoints; 
-            addRage(enemy.isBoss ? 50 : 10);
-
-            sfx.hit.currentTime = 0;
-            sfx.hit.play().catch(() => {});
-
-            if (enemy.isBoss) {
-                for (let i = 0; i < 3; i++) spawnRandomItem();
-            }
-
-            enemy.element.remove();
-            enemies.splice(idx, 1);
-            updateScoreUI();
-        } else {
-            sfx.hit.currentTime = 0;
-            sfx.hit.play().catch(() => {});
-        }
-    }
-
-    function getFollowerScoreMultiplier() {
-        return 1 + followers.length * INTERN_SCORE_MULTIPLIER;
-    }
-
-    function updatePlayerSpeedByFollowers() {
-        if (isFever) {
-            player.speed = player.baseSpeed * 2.5;
-            return;
-        }
-
-        if (boostTimeout) {
-            player.speed = player.baseSpeed * 2.2;
-            return;
-        }
-
-        const rate = Math.max(MIN_SPEED_RATE_WITH_INTERNS, 1 - followers.length * SPEED_PENALTY_PER_INTERN);
-        player.speed = player.baseSpeed * rate;
-    }
-
-    function activateBoost() {
-        if (isFever) return;
-
-        if (boostTimeout) {
-            clearTimeout(boostTimeout);
-        }
-
-        player.speed = player.baseSpeed * 2.2;
-        player.element.classList.add('boosted');
-
-        sfx.powerup.play().catch(() => {});
-        showFloatingText(player.x, player.y, 'SPEED UP!!', '#63b3ed');
-
-        boostTimeout = setTimeout(() => {
-            boostTimeout = null;
-            if (player.element) player.element.classList.remove('boosted');
-            updatePlayerSpeedByFollowers();
-        }, 5000);
-    }
-
-    function addRage(amount) {
-        if (isFever) return;
-
-        rage += amount;
-
-        if (rage >= RAGE_MAX) {
-            rage = RAGE_MAX;
-            startFeverMode();
-        }
-
-        updateRageUI();
-    }
-
-    function startFeverMode() {
-        isFever = true;
-        sfx.fever.play().catch(() => {});
-
-        showFloatingText(player.x, player.y, '🔥 FEVER TIME 🔥', '#e53e3e');
-        container.classList.add('fever-mode-bg');
-        player.element.classList.add('fever-player');
-        player.speed = player.baseSpeed * 2.5;
-        rageText.innerText = '!!! RAGE MODE !!!';
-
-        let duration = 10000;
-        let interval = 100;
-
-        let timer = setInterval(() => {
-            if (isPaused) return;
-
-            duration -= interval;
-            rage = (duration / 10000) * 100;
-            updateRageUI();
-
-            if (duration <= 0) {
-                clearInterval(timer);
-                endFeverMode();
-            }
-        }, interval);
-    }
-
-    function endFeverMode() {
-        isFever = false;
-        container.classList.remove('fever-mode-bg');
-
-        if (player.element) {
-            player.element.classList.remove('fever-player');
-        }
-
-        rage = 0;
-        updateRageUI();
-        rageText.innerText = 'RAGE GAUGE';
-        updatePlayerSpeedByFollowers();
-    }
-
-    function triggerAirstrike() { 
-        if (specialItem) {
-            specialItem.element.remove();
-            specialItem = null;
-        }
-
-        showFloatingText(player.x, player.y, '무작위 폭격 개시!!', '#e53e3e');
-
-        const bombCount = 15;
-        container.classList.add('shake-hard');
-
-        for (let i = 0; i < bombCount; i++) {
-            setTimeout(() => {
-                if (isGameOver || isPaused) return;
-
-                let bx = Math.random() * mapW;
-                let by = Math.random() * mapH;
-
-                createAim(bx, by);
-                setTimeout(() => createExplosion(bx, by), 500);
-            }, i * 150);
-        }
-
-        setTimeout(() => {
-            container.classList.remove('shake-hard');
-        }, bombCount * 150 + 1000);
-    }
-
-    function createAim(x, y) {
-        const aim = document.createElement('div');
-        aim.className = 'aim-target';
-        aim.style.left = x + 'px';
-        aim.style.top = y + 'px';
-        container.appendChild(aim);
-
-        setTimeout(() => aim.remove(), 500);
-    }
-
-    function createExplosion(x, y) {
-        sfx.boom.currentTime = 0;
-        sfx.boom.play().catch(() => {});
-
-        const exp = document.createElement('div');
-        exp.className = 'explosion';
-        exp.style.left = x + 'px';
-        exp.style.top = y + 'px';
-        container.appendChild(exp);
-
-        const blastRadius = 110;
-
-        for (let i = enemies.length - 1; i >= 0; i--) {
-            const enemy = enemies[i];
-
-            if (Math.hypot(enemy.x - x, enemy.y - y) < blastRadius) {
-                if (enemy.isBoss) {
-                    hitEnemy(enemy, i, 3);
-                } else {
-                    hitEnemy(enemy, i, 99);
-                }
-            }
-        }
-
-        setTimeout(() => exp.remove(), 800);
-    }
-
-    function updateScoreUI() {
-        scoreEl.innerText = score;
-        internEl.innerText = followers.length;
-        rescuedEl.innerText = rescuedCount;
-        lostEl.innerText = lostCount;
-    }
-
-    function updateRageUI() {
-        rageBar.style.width = rage + '%';
-    }
-
-    function updateWeaponUI() {
-        if (ammo > 0) {
-            weaponIcon.style.display = 'block';
-            weaponIcon.src = COFFEE_ICON;
-            ammoEl.innerText = ammo;
-        } else {
-            weaponIcon.style.display = 'none';
-            ammoEl.innerText = '';
-        }
-    }
-
-    function showFloatingText(x, y, text, color = '#f6e05e') {
-        const el = document.createElement('div');
-
-        el.className = 'floating-text';
-        el.innerText = text;
-        el.style.color = color;
-        el.style.left = x + 'px';
-        el.style.top = y + 'px';
-
-        container.appendChild(el);
-        setTimeout(() => el.remove(), 800);
-    }
-
-    function moveTarget() {
-        target.x = 60 + Math.random() * (mapW - 120);
-        target.y = 60 + Math.random() * (mapH - 120);
-        target.element.style.left = target.x + 'px';
-        target.element.style.top = target.y + 'px';
-    }
-
-    function moveExit() {
-        exit.x = 100 + Math.random() * (mapW - 200);
-        exit.y = 100 + Math.random() * (mapH - 200);
-        exit.element.style.left = exit.x + 'px';
-        exit.element.style.top = exit.y + 'px';
-    }
-
-    function updatePosition(obj) {
-        obj.element.style.left = obj.x + 'px';
-        obj.element.style.top = obj.y + 'px';
-    }
-
-    function loseFollower(index, reasonText = '인턴 낙오!') {
-        const f = followers[index];
-
-        if (!f) return;
-
-        showFloatingText(f.x, f.y, reasonText, '#e53e3e');
-        f.element.remove();
-        followers.splice(index, 1);
-        lostCount++;
-        updateScoreUI();
-        updatePlayerSpeedByFollowers();
-
-        container.classList.add('shake-hard');
-        setTimeout(() => container.classList.remove('shake-hard'), 250);
-    }
-
-    function checkFollowerDanger() {
-        for (let i = followers.length - 1; i >= 0; i--) {
-            const f = followers[i];
-            let isDanger = false;
-
-            for (let j = 0; j < enemies.length; j++) {
-                const enemy = enemies[j];
-                const dist = Math.hypot(f.x - enemy.x, f.y - enemy.y);
-
-                if (dist < 90) {
-                    isDanger = true;
-                }
-
-                if (!isFever && dist < (f.size / 2 + enemy.size / 3)) {
-                    loseFollower(i, '인턴 낙오!');
-                    break;
-                }
-            }
-
-            if (!followers[i]) continue;
-
-            if (isDanger) {
-                followers[i].element.classList.add('intern-danger');
-            } else {
-                followers[i].element.classList.remove('intern-danger');
-            }
-        }
-    }
-
-    function updateFollowers() {
-        followers.forEach((f, idx) => {
-            let targetX = idx === 0 ? player.x : followers[idx - 1].x;
-            let targetY = idx === 0 ? player.y : followers[idx - 1].y;
-
-            f.x += (targetX - f.x) * 0.15;
-            f.y += (targetY - f.y) * 0.15;
-
-            f.element.style.left = f.x + 'px';
-            f.element.style.top = f.y + 'px';
-        });
-    }
-
-    function rescueFollowersAtExit() {
-        if (followers.length <= 0) return;
-
-        const count = followers.length;
-        const chainBonus = count >= 3 ? 1.3 : 1;
-        const bonus = Math.floor(count * RESCUE_BONUS_PER_INTERN * chainBonus);
-
-        score += bonus;
-        rescuedCount += count;
-
-        showFloatingText(exit.x, exit.y, `인턴 ${count}명 탈출! (+${bonus})`, '#48bb78');
-        sfx.powerup.play().catch(() => {});
-
-        followers.forEach(f => f.element.remove());
-        followers = [];
-
-        updateScoreUI();
-        updatePlayerSpeedByFollowers();
-        moveExit();
-    }
-
-    function gameLoop() {
-        if (isGameOver) return;
-
-        if (isPaused || isCutscene) {
-            animationId = requestAnimationFrame(gameLoop);
-            return;
-        }
-
-        mapW = container.clientWidth;
-        mapH = container.clientHeight;
-
-        itemTimer++;
-        if (itemTimer > 240) {
-            if (Math.random() < 0.6) spawnRandomItem();
-            itemTimer = 0;
-        }
-
-        specialTimer++;
-        if (specialTimer > 500) {
-            if (Math.random() < 0.25 && !specialItem) spawnSpecialItem();
-            specialTimer = 0;
-        }
-
-        internTimer++;
-        if (internTimer > 300) {
-            if (Math.random() < 0.75 && interns.length < 4) spawnIntern();
-            internTimer = 0;
-        }
-
-        clientTimer++;
-        if (clientTimer > 600) {
-            if (Math.random() < 0.4) spawnEnemy('client');
-            clientTimer = 0;
-        }
-
-        exitTimer++;
-        if (exitTimer > 900) {
-            moveExit();
-            exitTimer = 0;
-        }
-
-        if (score >= bossSpawnThreshold) {
-            spawnBossCutscene();
-            bossSpawnThreshold += 300;
-        }
-
-        updatePlayerSpeedByFollowers();
-
-        if (keys.ArrowUp && player.y > player.size / 2) {
-            player.y -= player.speed;
-            lastDir = { x: 0, y: -1 };
-        }
-
-        if (keys.ArrowDown && player.y < mapH - player.size / 2) {
-            player.y += player.speed;
-            lastDir = { x: 0, y: 1 };
-        }
-
-        if (keys.ArrowLeft && player.x > player.size / 2) {
-            player.x -= player.speed;
-            lastDir = { x: -1, y: 0 };
-        }
-
-        if (keys.ArrowRight && player.x < mapW - player.size / 2) {
-            player.x += player.speed;
-            lastDir = { x: 1, y: 0 };
-        }
-
-        updatePosition(player);
-
-        if (!isFever) {
-            if (keys.ArrowLeft) player.element.style.transform = 'translate(-50%, -50%) scaleX(-1)';
-            if (keys.ArrowRight) player.element.style.transform = 'translate(-50%, -50%) scaleX(1)';
-        }
-
-        if (Math.hypot(player.x - target.x, player.y - target.y) < (player.size / 2 + target.size / 2)) {
-            const point = Math.floor(10 * getFollowerScoreMultiplier());
+    for (let i = shots.length - 1; i >= 0; i--) {
+      const shot = shots[i];
+      shot.x += shot.vx * dt;
+      renderShot(shot);
+
+      if (shot.x > gameW + 80) {
+        shot.el.remove();
+        shots.splice(i, 1);
+        continue;
+      }
+
+      for (let j = enemies.length - 1; j >= 0; j--) {
+        const enemy = enemies[j];
+
+        if (rectsHit(shot, enemy)) {
+          enemy.hp -= 1;
+          shot.el.remove();
+          shots.splice(i, 1);
+          playSfx(sfx.hit);
+
+          if (enemy.hp <= 0) {
+            const point = enemy.isBoss ? 500 : 50;
             score += point;
-            updateScoreUI();
-            moveTarget();
-            spawnEnemy('zombie');
-            addRage(5);
-            showFloatingText(player.x, player.y, '+' + point, '#f6e05e');
+            showFloatingText(enemy.x + enemy.w / 2, enemy.y, "+" + point, enemy.isBoss ? "#fc8181" : "#f6e05e");
+            enemy.el.remove();
+            enemies.splice(j, 1);
+          } else {
+            showFloatingText(enemy.x + enemy.w / 2, enemy.y, "커피!", "#f6e05e");
+            renderEnemy(enemy);
+          }
+          break;
         }
-
-        if (Math.hypot(player.x - exit.x, player.y - exit.y) < (player.size / 2 + exit.size / 2)) {
-            rescueFollowersAtExit();
-        }
-
-        for (let i = items.length - 1; i >= 0; i--) {
-            const item = items[i];
-
-            if (Math.hypot(player.x - item.x, player.y - item.y) < (player.size / 2 + item.size / 2)) {
-                if (item.type === 'drink') { 
-                    activateBoost();
-                } else { 
-                    ammo += 5;
-                    updateWeaponUI();
-                    sfx.powerup.play().catch(() => {}); 
-                    showFloatingText(player.x, player.y, '+5 Ammo', '#fff');
-                }
-
-                spawnEnemy('zombie'); 
-                item.element.remove();
-                items.splice(i, 1);
-            }
-        }
-
-        for (let i = interns.length - 1; i >= 0; i--) {
-            const intern = interns[i];
-
-            if (Math.hypot(player.x - intern.x, player.y - intern.y) < (player.size / 2 + intern.size / 2)) {
-                intern.element.classList.add('intern-following');
-                followers.push(intern);
-                interns.splice(i, 1);
-
-                showFloatingText(player.x, player.y, '인턴 합류!', '#63b3ed');
-                updateScoreUI();
-                updatePlayerSpeedByFollowers();
-            }
-        }
-
-        updateFollowers();
-        checkFollowerDanger();
-
-        if (specialItem && Math.hypot(player.x - specialItem.x, player.y - specialItem.y) < (player.size / 2 + specialItem.size / 2)) {
-            triggerAirstrike();
-        }
-
-        for (let i = projectiles.length - 1; i >= 0; i--) {
-            const p = projectiles[i];
-
-            p.x += p.dx;
-            p.y += p.dy;
-            p.element.style.left = p.x + 'px';
-            p.element.style.top = p.y + 'px';
-
-            if (p.x < -50 || p.x > mapW + 50 || p.y < -50 || p.y > mapH + 50) {
-                p.element.remove();
-                projectiles.splice(i, 1);
-                continue;
-            }
-
-            for (let j = enemies.length - 1; j >= 0; j--) {
-                const enemy = enemies[j];
-
-                if (Math.hypot(p.x - enemy.x, p.y - enemy.y) < (p.size / 2 + enemy.size / 2)) {
-                    hitEnemy(enemy, j);
-                    p.element.remove();
-                    projectiles.splice(i, 1);
-                    break; 
-                }
-            }
-        }
-
-        for (let i = enemyBullets.length - 1; i >= 0; i--) {
-            const b = enemyBullets[i];
-
-            b.x += b.dx;
-            b.y += b.dy;
-            b.element.style.left = b.x + 'px';
-            b.element.style.top = b.y + 'px';
-
-            if (b.x < -50 || b.x > mapW + 50 || b.y < -50 || b.y > mapH + 50) {
-                b.element.remove();
-                enemyBullets.splice(i, 1);
-                continue;
-            }
-
-            if (!isFever && Math.hypot(b.x - player.x, b.y - player.y) < (b.size / 2 + player.size / 3)) {
-                endGame();
-            }
-
-            for (let f = followers.length - 1; f >= 0; f--) {
-                if (!followers[f]) continue;
-
-                if (!isFever && Math.hypot(b.x - followers[f].x, b.y - followers[f].y) < (b.size / 2 + followers[f].size / 3)) {
-                    b.element.remove();
-                    enemyBullets.splice(i, 1);
-                    loseFollower(f, '서류 폭탄 피격!');
-                    break;
-                }
-            }
-        }
-
-        for (let idx = enemies.length - 1; idx >= 0; idx--) {
-            const enemy = enemies[idx];
-            const dx = player.x - enemy.x;
-            const dy = player.y - enemy.y;
-            const dist = Math.hypot(dx, dy);
-
-            if (enemy.type === 'client') {
-                if (dist > 350) {
-                    enemy.x += (dx / dist) * enemy.speed;
-                    enemy.y += (dy / dist) * enemy.speed;
-                } else if (dist < 250) {
-                    enemy.x -= (dx / dist) * enemy.speed;
-                    enemy.y -= (dy / dist) * enemy.speed;
-                }
-
-                enemy.attackCooldown--;
-
-                if (enemy.attackCooldown <= 0 && dist < 700) {
-                    enemyShoot(enemy);
-                    enemy.attackCooldown = 90;
-                }
-            } else {
-                if (dist > 1) {
-                    enemy.x += (dx / dist) * enemy.speed;
-                    enemy.y += (dy / dist) * enemy.speed;
-                }
-            }
-
-            if (dx < 0) {
-                enemy.element.style.transform = 'translate(-50%, -50%) scaleX(-1)';
-            } else {
-                enemy.element.style.transform = 'translate(-50%, -50%) scaleX(1)';
-            }
-
-            enemy.element.style.left = enemy.x + 'px';
-            enemy.element.style.top = enemy.y + 'px';
-
-            if (dist < (player.size / 2 + enemy.size / 3)) {
-                if (isFever) {
-                    hitEnemy(enemy, idx, 99);
-                } else {
-                    endGame();
-                }
-            }
-        }
-
-        animationId = requestAnimationFrame(gameLoop);
+      }
     }
 
-    function endGame() {
-        isGameOver = true;
-        isGameStarted = false;
+    const pRect = playerRect();
 
-        document.getElementById('final-score').innerText = score;
-        document.getElementById('final-rescued').innerText = rescuedCount;
-        document.getElementById('final-lost').innerText = lostCount;
+    for (let i = enemies.length - 1; i >= 0; i--) {
+      const enemy = enemies[i];
+      enemy.x -= enemy.vx * dt;
+      renderEnemy(enemy);
 
-        gameOverScreen.style.display = 'flex';
-        bgm.pause();
+      if (enemy.x + enemy.w < -120) {
+        enemy.el.remove();
+        enemies.splice(i, 1);
+        continue;
+      }
+
+      if (rectsHit(pRect, enemy)) {
+        const playerBottom = pRect.y + pRect.h;
+        const enemyTop = enemy.y;
+        const isLandingOnEnemy = player.vy > 0 && playerBottom - enemyTop < enemy.h * 0.35;
+
+        if (enemy.isBoss) {
+          if (player.jumpCount >= 2 && isLandingOnEnemy) {
+            score += 220;
+            showFloatingText(enemy.x + enemy.w / 2, enemy.y, "2단 점프 회피!", "#63b3ed");
+            enemy.el.remove();
+            enemies.splice(i, 1);
+            player.vy = -player.jumpPower * 0.55;
+            playSfx(sfx.power);
+            continue;
+          }
+        } else {
+          if (isLandingOnEnemy) {
+            score += 70;
+            showFloatingText(enemy.x + enemy.w / 2, enemy.y, "점프 회피!", "#9ae6b4");
+            enemy.el.remove();
+            enemies.splice(i, 1);
+            player.vy = -player.jumpPower * 0.45;
+            playSfx(sfx.power);
+            continue;
+          }
+        }
+
+        if (invincibleTimer <= 0) {
+          endGame();
+          return;
+        }
+      }
     }
 
-    window.addEventListener('keydown', (e) => {
-        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', 'KeyZ', 'KeyP'].includes(e.code)) {
-            e.preventDefault();
+    for (let i = items.length - 1; i >= 0; i--) {
+      const item = items[i];
+      item.x -= item.vx * dt;
+      renderItem(item);
+
+      if (item.x + item.w < -80) {
+        item.el.remove();
+        items.splice(i, 1);
+        continue;
+      }
+
+      if (rectsHit(pRect, item)) {
+        if (item.type === "energy") {
+          invincibleTimer = 3.2;
+          showFloatingText(item.x, item.y, "3초 무적!", "#63b3ed");
+        } else {
+          score += 80;
+          showFloatingText(item.x, item.y, "카페인 충전!", "#f6e05e");
         }
 
-        if (e.code === 'KeyP') {
-            if (isGameStarted && !isGameOver && !isCutscene) {
-                isPaused = !isPaused;
+        playSfx(sfx.power);
+        item.el.remove();
+        items.splice(i, 1);
+      }
+    }
+  }
 
-                if (isPaused) {
-                    pauseScreen.style.display = 'flex';
-                    bgm.volume = 0.1;
-                } else {
-                    pauseScreen.style.display = 'none';
-                    bgm.volume = 0.4;
-                }
-            }
-        }
+  function loop(now) {
+    if (isGameOver) return;
 
-        if (e.code === 'Space') {
-            if (!isGameStarted || isGameOver) {
-                initGame();
-            }
-        }
+    const dt = Math.min(0.033, (now - lastFrame) / 1000);
+    lastFrame = now;
 
-        if (e.code === 'KeyZ') {
-            fireWeapon();
-        }
+    if (isStarted && !isBossWarning) {
+      update(dt);
+    } else if (isStarted && isBossWarning) {
+      update(Math.min(dt, 0.008));
+    }
 
-        if (keys.hasOwnProperty(e.code)) {
-            keys[e.code] = true;
-        }
+    animationId = requestAnimationFrame(loop);
+  }
+
+  window.addEventListener("keydown", (e) => {
+    if (["Space", "ArrowUp", "KeyZ"].includes(e.code)) {
+      e.preventDefault();
+    }
+
+    if (e.code === "Space") {
+      if (!isStarted || isGameOver) {
+        initGame();
+      } else {
+        jump();
+      }
+    }
+
+    if (e.code === "ArrowUp") {
+      jump();
+    }
+
+    if (e.code === "KeyZ") {
+      attack();
+    }
+  });
+
+  const jumpBtn = document.getElementById("jumpBtn");
+  const attackBtn = document.getElementById("attackBtn");
+  const startMobileBtn = document.getElementById("startMobileBtn");
+
+  function bindTap(btn, handler) {
+    if (!btn) return;
+
+    btn.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      handler();
     });
+  }
 
-    window.addEventListener('keyup', (e) => {
-        if (keys.hasOwnProperty(e.code)) {
-            keys[e.code] = false;
-        }
-    });
+  bindTap(jumpBtn, jump);
+  bindTap(attackBtn, attack);
+  bindTap(startMobileBtn, () => {
+    if (!isStarted || isGameOver) initGame();
+  });
 
-    const attackBtn = document.getElementById('attackBtn');
-    if (attackBtn) {
-        attackBtn.addEventListener('touchstart', function(e) {
-            e.preventDefault();
-            fireWeapon();
-        }, { passive: false });
+  window.addEventListener("blur", () => {
+    if (bgm) bgm.pause();
+  });
 
-        attackBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            fireWeapon();
-        });
-    }
-
-    const startBtn = document.getElementById('startBtn');
-    if (startBtn) {
-        startBtn.addEventListener('touchstart', function(e) {
-            e.preventDefault();
-            if (!isGameStarted || isGameOver) {
-                initGame();
-            }
-        }, { passive: false });
-
-        startBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            if (!isGameStarted || isGameOver) {
-                initGame();
-            }
-        });
-    }
-
-    const joystick = document.getElementById('joystick');
-    const knob = document.getElementById('joystick-knob');
-
-    let joystickActive = false;
-    let joystickPointerId = null;
-    let joystickRadius = 48;
-
-    function resetJoystick() {
-        keys.ArrowUp = false;
-        keys.ArrowDown = false;
-        keys.ArrowLeft = false;
-        keys.ArrowRight = false;
-
-        if (knob) {
-            knob.style.left = '50%';
-            knob.style.top = '50%';
-        }
-    }
-
-    function updateJoystickByPoint(clientX, clientY) {
-        if (!joystick || !knob) return;
-
-        const rect = joystick.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
-        joystickRadius = rect.width * 0.38;
-
-        let dx = clientX - centerX;
-        let dy = clientY - centerY;
-
-        const distance = Math.hypot(dx, dy);
-        const maxDistance = joystickRadius;
-
-        if (distance > maxDistance) {
-            dx = (dx / distance) * maxDistance;
-            dy = (dy / distance) * maxDistance;
-        }
-
-        knob.style.left = `calc(50% + ${dx}px)`;
-        knob.style.top = `calc(50% + ${dy}px)`;
-
-        const threshold = rect.width * 0.12;
-
-        keys.ArrowLeft = dx < -threshold;
-        keys.ArrowRight = dx > threshold;
-        keys.ArrowUp = dy < -threshold;
-        keys.ArrowDown = dy > threshold;
-
-        if (Math.abs(dx) > Math.abs(dy)) {
-            lastDir = { x: dx > 0 ? 1 : -1, y: 0 };
-        } else if (Math.abs(dy) > threshold) {
-            lastDir = { x: 0, y: dy > 0 ? 1 : -1 };
-        }
-    }
-
-    if (joystick) {
-        joystick.addEventListener('pointerdown', function(e) {
-            e.preventDefault();
-            joystickActive = true;
-            joystickPointerId = e.pointerId;
-            joystick.setPointerCapture(e.pointerId);
-            updateJoystickByPoint(e.clientX, e.clientY);
-        });
-
-        joystick.addEventListener('pointermove', function(e) {
-            e.preventDefault();
-            if (joystickActive && e.pointerId === joystickPointerId) {
-                updateJoystickByPoint(e.clientX, e.clientY);
-            }
-        });
-
-        joystick.addEventListener('pointerup', function(e) {
-            e.preventDefault();
-            if (e.pointerId === joystickPointerId) {
-                joystickActive = false;
-                joystickPointerId = null;
-                resetJoystick();
-            }
-        });
-
-        joystick.addEventListener('pointercancel', function(e) {
-            e.preventDefault();
-            joystickActive = false;
-            joystickPointerId = null;
-            resetJoystick();
-        });
-    }
-
-    window.addEventListener('blur', () => {
-        Object.keys(keys).forEach(k => keys[k] = false);
-        resetJoystick();
-    });
-
-    window.addEventListener('resize', () => {
-        if (container) {
-            mapW = container.clientWidth;
-            mapH = container.clientHeight;
-        }
-    });
+  measure();
 </script>
 </body>
 </html>
