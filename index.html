@@ -2,7 +2,8 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>The Salaryman: Rescue Mission Edition - Visible Intern Fix</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>The Salaryman Mobile Optimized</title>
     <style>
         body { 
             margin: 0;
@@ -13,7 +14,8 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            user-select: none; 
+            user-select: none;
+            touch-action: none;
         }
 
         #game-container {
@@ -466,6 +468,220 @@
             font-size: 16px;
             line-height: 1.8;
         }
+
+        #mobile-controls {
+            display: none;
+        }
+
+        .mobile-guide {
+            display: none;
+        }
+
+        @media (max-width: 768px), (pointer: coarse) {
+            body {
+                width: 100vw;
+                height: 100dvh;
+                align-items: flex-start;
+            }
+
+            #game-container {
+                width: 100vw;
+                height: 100dvh;
+                border: none;
+                box-shadow: none;
+            }
+
+            #ui-layer {
+                top: 8px;
+                padding: 0 10px;
+            }
+
+            h2 {
+                font-size: 18px;
+            }
+
+            .score-txt {
+                font-size: 15px;
+            }
+
+            .sub-txt {
+                font-size: 11px;
+                line-height: 1.35;
+            }
+
+            .mission-txt {
+                display: none;
+            }
+
+            #rage-container {
+                width: 140px;
+                height: 16px;
+                margin-top: 5px;
+            }
+
+            #rage-text {
+                font-size: 10px;
+                line-height: 16px;
+            }
+
+            #right-ui {
+                display: none;
+            }
+
+            .creator-mark {
+                bottom: 118px;
+                right: 12px;
+                font-size: 11px;
+            }
+
+            .start-title {
+                font-size: 34px;
+                line-height: 1.1;
+                padding: 0 12px;
+            }
+
+            .start-desc {
+                font-size: 15px;
+                margin: 10px 0;
+                padding: 0 18px;
+            }
+
+            .rule-box {
+                width: 80%;
+                max-width: 360px;
+                font-size: 13px;
+                line-height: 1.55;
+                padding: 14px 12px;
+                margin-top: 10px;
+            }
+
+            .pc-guide {
+                display: none;
+            }
+
+            .mobile-guide {
+                display: block;
+                margin-top: 18px;
+                color: #f6e05e;
+                font-size: 17px;
+                font-weight: 800;
+            }
+
+            #game-over-screen h1 {
+                font-size: 44px !important;
+            }
+
+            #pause-screen h1 {
+                font-size: 42px !important;
+            }
+
+            .warning-text {
+                font-size: 48px;
+            }
+
+            #mobile-controls {
+                display: flex;
+                position: absolute;
+                left: 0;
+                bottom: 16px;
+                width: 100%;
+                justify-content: space-between;
+                align-items: flex-end;
+                padding: 0 16px;
+                box-sizing: border-box;
+                z-index: 500;
+                pointer-events: none;
+            }
+
+            .mobile-pad,
+            .mobile-action {
+                pointer-events: auto;
+            }
+
+            .mobile-pad {
+                display: grid;
+                grid-template-columns: 56px 56px 56px;
+                grid-template-rows: 56px 56px;
+                gap: 7px;
+            }
+
+            .mobile-pad button,
+            .mobile-action button {
+                border: 1px solid rgba(255,255,255,0.35);
+                border-radius: 15px;
+                background: rgba(255,255,255,0.22);
+                color: white;
+                font-size: 24px;
+                font-weight: 900;
+                backdrop-filter: blur(8px);
+                box-shadow: 0 4px 12px rgba(0,0,0,0.45);
+                touch-action: none;
+            }
+
+            .mobile-pad button:active,
+            .mobile-action button:active {
+                background: rgba(246,224,94,0.65);
+                transform: scale(0.96);
+            }
+
+            #upBtn {
+                grid-column: 2;
+                grid-row: 1;
+            }
+
+            #leftBtn {
+                grid-column: 1;
+                grid-row: 2;
+            }
+
+            #downBtn {
+                grid-column: 2;
+                grid-row: 2;
+            }
+
+            #rightBtn {
+                grid-column: 3;
+                grid-row: 2;
+            }
+
+            .mobile-action {
+                display: flex;
+                flex-direction: column;
+                gap: 9px;
+            }
+
+            .mobile-action button {
+                width: 94px;
+                height: 56px;
+                font-size: 18px;
+            }
+
+            #attackBtn {
+                background: rgba(229,62,62,0.68);
+            }
+
+            #startBtn {
+                background: rgba(72,187,120,0.68);
+            }
+        }
+
+        @media (max-width: 768px) and (orientation: portrait) {
+            #game-container::after {
+                content: "가로 화면으로 플레이하면 더 편합니다";
+                position: absolute;
+                left: 50%;
+                top: 58px;
+                transform: translateX(-50%);
+                z-index: 450;
+                padding: 6px 10px;
+                border-radius: 20px;
+                background: rgba(0,0,0,0.5);
+                color: rgba(255,255,255,0.75);
+                font-size: 12px;
+                white-space: nowrap;
+                pointer-events: none;
+            }
+        }
     </style>
 </head>
 <body>
@@ -503,6 +719,20 @@
 
         <div class="creator-mark">Created by (주)굿인사이트 이준오</div>
 
+        <div id="mobile-controls">
+            <div class="mobile-pad">
+                <button id="upBtn">↑</button>
+                <button id="leftBtn">←</button>
+                <button id="downBtn">↓</button>
+                <button id="rightBtn">→</button>
+            </div>
+
+            <div class="mobile-action">
+                <button id="attackBtn">공격</button>
+                <button id="startBtn">시작</button>
+            </div>
+        </div>
+
         <div id="start-screen">
             <h1 class="start-title">THE SALARYMAN</h1>
             <p class="start-desc">신입사원을 구출해 비상구까지 데려가세요.</p>
@@ -513,7 +743,8 @@
                 단, 동행 인원이 많을수록 이동속도 감소<br>
                 적이 신입사원에게 닿으면 낙오 처리
             </div>
-            <p style="margin-top:25px; color:#f6e05e; font-size:22px;">Spacebar를 눌러 시작</p>
+            <p class="pc-guide" style="margin-top:25px; color:#f6e05e; font-size:22px;">Spacebar를 눌러 시작</p>
+            <p class="mobile-guide">오른쪽 아래 시작 버튼을 눌러 시작</p>
         </div>
 
         <div id="boss-warning-screen">
@@ -531,7 +762,8 @@
             <p style="font-size:24px; color:white;">최종 성과: <span id="final-score">0</span></p>
             <p style="font-size:18px; color:#9ae6b4;">탈출 성공: <span id="final-rescued">0</span>명</p>
             <p style="font-size:18px; color:#fc8181;">낙오: <span id="final-lost">0</span>명</p>
-            <p style="margin-top:20px; color:#aaa;">Spacebar를 눌러 재도전</p>
+            <p class="pc-guide" style="margin-top:20px; color:#aaa;">Spacebar를 눌러 재도전</p>
+            <p class="mobile-guide">오른쪽 아래 시작 버튼을 눌러 재도전</p>
         </div>
     </div>
 
@@ -721,7 +953,6 @@
             spawnEnemy('zombie');
         }
 
-        // 시작 직후 인턴 1명은 반드시 등장시켜 구출 미션이 바로 보이게 함
         spawnIntern();
 
         if (animationId) cancelAnimationFrame(animationId);
@@ -1552,6 +1783,79 @@
         if (keys.hasOwnProperty(e.code)) {
             keys[e.code] = false;
         }
+    });
+
+    function bindMobileButton(buttonId, keyCode) {
+        const btn = document.getElementById(buttonId);
+        if (!btn) return;
+
+        btn.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            keys[keyCode] = true;
+        }, { passive: false });
+
+        btn.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            keys[keyCode] = false;
+        }, { passive: false });
+
+        btn.addEventListener('touchcancel', function(e) {
+            e.preventDefault();
+            keys[keyCode] = false;
+        }, { passive: false });
+
+        btn.addEventListener('mousedown', function(e) {
+            e.preventDefault();
+            keys[keyCode] = true;
+        });
+
+        btn.addEventListener('mouseup', function(e) {
+            e.preventDefault();
+            keys[keyCode] = false;
+        });
+
+        btn.addEventListener('mouseleave', function() {
+            keys[keyCode] = false;
+        });
+    }
+
+    bindMobileButton('upBtn', 'ArrowUp');
+    bindMobileButton('downBtn', 'ArrowDown');
+    bindMobileButton('leftBtn', 'ArrowLeft');
+    bindMobileButton('rightBtn', 'ArrowRight');
+
+    const attackBtn = document.getElementById('attackBtn');
+    if (attackBtn) {
+        attackBtn.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            fireWeapon();
+        }, { passive: false });
+
+        attackBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            fireWeapon();
+        });
+    }
+
+    const startBtn = document.getElementById('startBtn');
+    if (startBtn) {
+        startBtn.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            if (!isGameStarted || isGameOver) {
+                initGame();
+            }
+        }, { passive: false });
+
+        startBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (!isGameStarted || isGameOver) {
+                initGame();
+            }
+        });
+    }
+
+    window.addEventListener('blur', () => {
+        Object.keys(keys).forEach(k => keys[k] = false);
     });
 </script>
 </body>
